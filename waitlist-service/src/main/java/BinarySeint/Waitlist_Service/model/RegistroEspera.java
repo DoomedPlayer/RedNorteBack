@@ -29,9 +29,64 @@ public class RegistroEspera {
     @Column(nullable = false)
     private String estado; // EN_ESPERA, ASIGNADO, CANCELADO
 
-    // Constructores, Getters y Setters (Puedes omitir esto si usas Lombok con @Data)
-    
+    // Constructor vacío requerido por JPA
     public RegistroEspera() {}
 
-    // Getters y Setters...
+    // --- Getters y Setters ---
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getRutPaciente() {
+        return rutPaciente;
+    }
+
+    public void setRutPaciente(String rutPaciente) {
+        this.rutPaciente = rutPaciente;
+    }
+
+    public String getEspecialidad() {
+        return especialidad;
+    }
+
+    public void setEspecialidad(String especialidad) {
+        this.especialidad = especialidad;
+    }
+
+    public String getTipoAtencion() {
+        return tipoAtencion;
+    }
+
+    public void setTipoAtencion(String tipoAtencion) {
+        this.tipoAtencion = tipoAtencion;
+    }
+
+    public Integer getNivelPrioridad() {
+        return nivelPrioridad;
+    }
+
+    public void setNivelPrioridad(Integer nivelPrioridad) {
+        this.nivelPrioridad = nivelPrioridad;
+    }
+
+    public LocalDateTime getFechaIngreso() {
+        return fechaIngreso;
+    }
+
+    public void setFechaIngreso(LocalDateTime fechaIngreso) {
+        this.fechaIngreso = fechaIngreso;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
 }
