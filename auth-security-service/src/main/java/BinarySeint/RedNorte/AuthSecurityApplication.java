@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class RedNorteApplication {
+public class AuthSecurityApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RedNorteApplication.class, args);
+		SpringApplication.run(AuthSecurityApplication.class, args);
 	}
 
 }
