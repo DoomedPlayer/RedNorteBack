@@ -4,9 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.6</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<artifactId>salud-rednorte-parent</artifactId>
+		<version>1.0.0</version>
 	</parent>
 	<groupId>BinarySeint</groupId>
 	<artifactId>Waitlist-Service</artifactId>
