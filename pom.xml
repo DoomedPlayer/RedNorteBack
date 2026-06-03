@@ -7,7 +7,7 @@
         <module>api-gateway</module>
         <module>bff</module>
         <module>waitlist-service</module>
-        <module>auto-reassignment-service</module>
+        <module>AutoReasign-Service</module>
         <module>patient-portal-service</module>
     </modules>
 
