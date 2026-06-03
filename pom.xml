@@ -6,9 +6,10 @@
     <packaging>pom</packaging> <modules>
         <module>api-gateway</module>
         <module>bff</module>
-        <module>waitlist-service</module>
+        <module>Waitlist-Service</module>
         <module>AutoReasign-Service</module>
         <module>patient-portal-service</module>
     </modules>
 
     </project>
+    
