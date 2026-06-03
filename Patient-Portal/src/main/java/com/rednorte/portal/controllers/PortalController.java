@@ -1,5 +1,6 @@
 package com.rednorte.portal.controllers;
 
+import com.rednorte.portal.dtos.PacienteDTO;
 import com.rednorte.portal.entities.Paciente;
 import com.rednorte.portal.repositories.PacienteRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,34 +13,39 @@ import java.util.Optional;
 @RequestMapping("/api/v1/portal")
 public class PortalController {
 
-    // Conectamos a nuestro "bibliotecario" de la base de datos
     @Autowired
     private PacienteRepository pacienteRepository;
 
-    // 1. El endpoint de prueba que ya tenías
     @GetMapping("/test")
     public ResponseEntity<String> test() {
-        return ResponseEntity.ok("{\"mensaje\": \"BFF Portal del Paciente funcionando correctamente\"}");
+        return ResponseEntity.ok("{\"mensaje\": \"BFF Portal del Paciente funcionando\"}");
     }
 
-    // 2. NUEVO: Endpoint para REGISTRAR un paciente (POST)
     @PostMapping("/pacientes")
     public ResponseEntity<Paciente> registrarPaciente(@RequestBody Paciente paciente) {
-        // Guarda el paciente en MySQL y lo devuelve con su ID generado
-        Paciente nuevoPaciente = pacienteRepository.save(paciente);
-        return ResponseEntity.ok(nuevoPaciente);
+        return ResponseEntity.ok(pacienteRepository.save(paciente));
     }
 
-    // 3. NUEVO: Endpoint para BUSCAR un paciente por RUT (GET)
+    // ¡MÉTODO ACTUALIZADO! Ahora devuelve un PacienteDTO
     @GetMapping("/pacientes/{rut}")
-    public ResponseEntity<Paciente> buscarPorRut(@PathVariable String rut) {
-        // Usa la magia de Spring Data JPA que configuramos en el Repositorio
-        Optional<Paciente> paciente = pacienteRepository.findByRut(rut);
+    public ResponseEntity<PacienteDTO> buscarPorRut(@PathVariable String rut) {
+        Optional<Paciente> pacienteOpt = pacienteRepository.findByRut(rut);
         
-        if (paciente.isPresent()) {
-            return ResponseEntity.ok(paciente.get()); // Si lo encuentra, devuelve status 200 OK
+        if (pacienteOpt.isPresent()) {
+            Paciente paciente = pacienteOpt.get();
+            
+            // TRANSFRORMACIÓN: Pasamos de Entidad a DTO (Pulimos los datos)
+            PacienteDTO dtoRespuesta = PacienteDTO.builder()
+                    .rut(paciente.getRut())
+                    .nombreCompleto(paciente.getNombre() + " " + paciente.getApellidos()) // Juntamos los strings
+                    .correo(paciente.getCorreo())
+                    .alertasActivas(paciente.getNotificacionesActivas())
+                    .estadoListaEspera("Pendiente de asignación médica") // Dato estratégico para el Frontend
+                    .build();
+            
+            return ResponseEntity.ok(dtoRespuesta);
         } else {
-            return ResponseEntity.notFound().build(); // Si no existe, devuelve status 404 Not Found
+            return ResponseEntity.notFound().build();
         }
     }
 }
