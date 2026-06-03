@@ -1,35 +1,34 @@
 package BinarySeint.Waitlist_Service.factory;
 
 import BinarySeint.Waitlist_Service.model.RegistroEspera;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class WaitlistFactory {
 
-    public static RegistroEspera crearRegistro(String rut, String especialidad, String tipoAtencion) {
+    public static RegistroEspera crearRegistro(String rut, Integer idEspecialidad, String tipoAtencion) {
         RegistroEspera registro = new RegistroEspera();
         registro.setRutPaciente(rut);
-        registro.setEspecialidad(especialidad);
-        registro.setFechaIngreso(LocalDateTime.now());
-        registro.setEstado("EN_ESPERA");
+        registro.setIdEspecialidad(idEspecialidad);
+        registro.setFechaIngreso(LocalDate.now()); 
+        registro.setEstado("En espera"); // Nuevo estándar de texto
         
-        // El Factory define la prioridad base dependiendo del tipo de atención
         switch (tipoAtencion.toUpperCase()) {
             case "URGENCIA":
-                registro.setTipoAtencion("URGENCIA");
+                registro.setTipoAtencion("Urgencia");
                 registro.setNivelPrioridad(1); 
                 break;
             case "CIRUGIA":
-                registro.setTipoAtencion("CIRUGIA");
+                registro.setTipoAtencion("Cirugía");
                 registro.setNivelPrioridad(2);
                 break;
             case "PROCEDIMIENTO":
-                registro.setTipoAtencion("PROCEDIMIENTO");
+                registro.setTipoAtencion("Procedimiento");
                 registro.setNivelPrioridad(3);
                 break;
             case "CONSULTA":
             default:
-                registro.setTipoAtencion("CONSULTA");
-                registro.setNivelPrioridad(5); // Prioridad más baja
+                registro.setTipoAtencion("Consulta");
+                registro.setNivelPrioridad(5);
                 break;
         }
         return registro;

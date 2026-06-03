@@ -17,21 +17,23 @@ public class WaitlistController {
     @Autowired
     private WaitlistService service;
 
-    // Endpoint para que el Frontend registre un paciente: POST /api/espera/registrar
     @PostMapping("/registrar")
-    public ResponseEntity<RegistroEspera> registrarPaciente(@RequestBody Map<String, String> request) {
+    public ResponseEntity<RegistroEspera> registrarPaciente(@RequestBody Map<String, Object> request) {
+        // Parseamos el dato a Integer para pasarlo al servicio
+        Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
+        
         RegistroEspera registrado = service.registrarPaciente(
-                request.get("rut"),
-                request.get("especialidad"),
-                request.get("tipoAtencion")
+                request.get("rutPaciente").toString(),
+                idEspecialidad,
+                request.get("tipoAtencion").toString()
         );
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
     }
 
-    // Endpoint para ver la lista de una especialidad: GET /api/espera/lista/{especialidad}
-    @GetMapping("/lista/{especialidad}")
-    public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable String especialidad) {
-        List<RegistroEspera> lista = service.obtenerListaPorEspecialidad(especialidad);
+    // Ahora la URL recibe un número de especialidad: GET /api/espera/lista/1
+    @GetMapping("/lista/{idEspecialidad}")
+    public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable Integer idEspecialidad) {
+        List<RegistroEspera> lista = service.obtenerListaPorEspecialidad(idEspecialidad);
         return ResponseEntity.ok(lista);
     }
 }
