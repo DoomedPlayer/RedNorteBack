@@ -16,7 +16,7 @@ public class RegistroEspera {
     private String rutPaciente;
 
     @Column(name = "id_especialidad", nullable = false)
-    private Integer idEspecialidad; // Cambio a INT por la relación con la tabla especialidad
+    private Integer idEspecialidad; 
 
     @Column(name = "tipo_atencion", nullable = false)
     private String tipoAtencion;
@@ -26,6 +26,7 @@ public class RegistroEspera {
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso; 
+    
     @Column(nullable = false)
     private String estado;
 

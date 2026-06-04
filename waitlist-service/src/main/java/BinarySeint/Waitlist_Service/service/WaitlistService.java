@@ -14,14 +14,12 @@ public class WaitlistService {
     @Autowired
     private WaitlistRepository repository;
 
-    // Método que usa tu Factory para crear el registro y luego lo guarda en la BD
-    public RegistroEspera registrarPaciente(String rut, String especialidad, String tipoAtencion) {
-        RegistroEspera nuevoRegistro = WaitlistFactory.crearRegistro(rut, especialidad, tipoAtencion);
+    public RegistroEspera registrarPaciente(String rut, Integer idEspecialidad, String tipoAtencion) {
+        RegistroEspera nuevoRegistro = WaitlistFactory.crearRegistro(rut, idEspecialidad, tipoAtencion);
         return repository.save(nuevoRegistro);
     }
 
-    // Método que usa tu Repository para traer la lista ordenada por prioridad
-    public List<RegistroEspera> obtenerListaPorEspecialidad(String especialidad) {
-        return repository.findByEspecialidadAndEstadoOrderByNivelPrioridadAscFechaIngresoAsc(especialidad, "EN_ESPERA");
+    public List<RegistroEspera> obtenerListaPorEspecialidad(Integer idEspecialidad) {
+        return repository.findByIdEspecialidadAndEstadoOrderByNivelPrioridadAscFechaIngresoAsc(idEspecialidad, "En espera");
     }
 }

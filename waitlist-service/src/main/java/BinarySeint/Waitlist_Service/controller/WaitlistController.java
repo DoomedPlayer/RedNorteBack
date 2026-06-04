@@ -30,7 +30,7 @@ public class WaitlistController {
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
     }
 
-    // Ahora la URL recibe un número de especialidad: GET /api/espera/lista/1
+    // URL que recibe un número de especialidad: GET /api/espera/lista/1
     @GetMapping("/lista/{idEspecialidad}")
     public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable Integer idEspecialidad) {
         List<RegistroEspera> lista = service.obtenerListaPorEspecialidad(idEspecialidad);
