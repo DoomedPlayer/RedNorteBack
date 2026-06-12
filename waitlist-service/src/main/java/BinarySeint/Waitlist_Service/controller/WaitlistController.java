@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "*") 
 @RequestMapping("/api/espera")
 public class WaitlistController {
 
@@ -19,7 +20,6 @@ public class WaitlistController {
 
     @PostMapping("/registrar")
     public ResponseEntity<RegistroEspera> registrarPaciente(@RequestBody Map<String, Object> request) {
-        // Parseamos el dato a Integer para pasarlo al servicio
         Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
         
         RegistroEspera registrado = service.registrarPaciente(
@@ -30,7 +30,6 @@ public class WaitlistController {
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
     }
 
-    // URL que recibe un número de especialidad: GET /api/espera/lista/1
     @GetMapping("/lista/{idEspecialidad}")
     public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable Integer idEspecialidad) {
         List<RegistroEspera> lista = service.obtenerListaPorEspecialidad(idEspecialidad);
