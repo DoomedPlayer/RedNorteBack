@@ -1,5 +1,6 @@
 package BinarySeint.BFF.controller;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,7 +15,6 @@ import com.rednorte.portal.dtos.PacienteDTO;
 
 import BinarySeint.BFF.dto.DashboardDTO;
 import BinarySeint.Waitlist_Service.dto.ListaEsperaDTO;
-import BinarySeint.Waitlist_Service.model.RegistroEspera;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -29,13 +29,12 @@ public class PacienteDashboardController {
 
     @GetMapping("/dashboard/{id}")
     public Mono<DashboardDTO> getDashboardCompleto(@PathVariable String id) {
+
         Mono<PacienteDTO> pacienteMono = webClientBuilder.build()
                 .get()
                 .uri("http://localhost:8081/api/patients/" + id)
                         .retrieve()
                         .bodyToMono(PacienteDTO.class);
-
-        // 2. Llamada interna al microservicio de lista de espera
         Mono<ListaEsperaDTO> esperaMono = webClientBuilder.build()
                 .get()
                 .uri("http://localhost:8082/api/waitlist/paciente/" + id)
@@ -43,19 +42,28 @@ public class PacienteDashboardController {
                 .bodyToMono(ListaEsperaDTO.class);
         Mono<List<CitaMedicaDTO>> citaMono = webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8082/api/waitlist/paciente/" + id)
+                .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/citas")
                 .retrieve()
-                .bodyToMono(List<CitaMedicaDTO>.class);
+                .bodyToFlux(CitaMedicaDTO.class) 
+                .collectList()                  
+                .onErrorReturn(new ArrayList<>());
         Mono<List<DocumentoDTO>> documentoMono = webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8082/api/waitlist/paciente/" + id)
+                .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/documentos")
                 .retrieve()
-                .bodyToMono(List<DocumentoDTO>.class);
+                .bodyToFlux(DocumentoDTO.class) 
+                .collectList()                  
+                .onErrorReturn(new ArrayList<>());
 
-
-        // 3. Combinamos ambas respuestas en un solo objeto optimizado para React
         return Mono.zip(pacienteMono, esperaMono, citaMono, documentoMono)
-                .map(tuple -> new DashboardDTO(tuple.getT1(), tuple.getT2(),tuple.getT3(),tuple.getT4()));
+                .map(tuple -> {
+                    PacienteDTO paciente = tuple.getT1();
+                    ListaEsperaDTO listaEspera = tuple.getT2();
+                    List<CitaMedicaDTO> citas = tuple.getT3();
+                    List<DocumentoDTO> documentos = tuple.getT4();
+                    
+                    return new DashboardDTO(paciente, listaEspera, citas, documentos);
+                });
     }
         
 }
