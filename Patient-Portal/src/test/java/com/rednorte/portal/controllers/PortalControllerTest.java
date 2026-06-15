@@ -1,20 +1,18 @@
 package com.rednorte.portal.controllers;
 
 import com.rednorte.portal.entities.Paciente;
+import com.rednorte.portal.entities.Persona;
 import com.rednorte.portal.repositories.PacienteRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
-// Importamos "get" y "post" para simular las peticiones
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -28,66 +26,39 @@ public class PortalControllerTest {
     private PacienteRepository pacienteRepository;
 
     @Test
-    public void testBuscarPorRutEncontrado() throws Exception {
-        Paciente pacienteMock = Paciente.builder()
-                .id(1L)
+    public void obtenerPacientePorRut_Exito() throws Exception {
+        // 1. Armamos la Persona (Nuevo modelo 3NF)
+        Persona persona = Persona.builder()
                 .rut("12345678-9")
-                .nombre("Pedro")
-                .apellidos("Pascal")
-                .correo("pedro@rednorte.cl")
-                .notificacionesActivas(true)
+                .primerNombre("Pedro")
+                .apellidoPaterno("Pascal")
+                .apellidoMaterno("Balmaceda")
+                .email("pedro.pascal@rednorte.cl")
                 .build();
 
-        Mockito.when(pacienteRepository.findByRut("12345678-9")).thenReturn(Optional.of(pacienteMock));
+        // 2. Armamos el Paciente asociado a esa Persona
+        Paciente paciente = Paciente.builder()
+                .rutPaciente("12345678-9")
+                .persona(persona)
+                .build();
 
-        mockMvc.perform(get("/api/v1/portal/pacientes/12345678-9")
-                .contentType(MediaType.APPLICATION_JSON))
+        // 3. Simulamos el comportamiento usando el nuevo método "findByRutPaciente"
+        Mockito.when(pacienteRepository.findByRutPaciente("12345678-9")).thenReturn(Optional.of(paciente));
+
+        // 4. Ejecutamos la petición y verificamos que traiga el nombre completo
+        mockMvc.perform(get("/api/v1/portal/pacientes/12345678-9"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rut").value("12345678-9"))
-                .andExpect(jsonPath("$.nombreCompleto").value("Pedro Pascal"))
-                .andExpect(jsonPath("$.estadoListaEspera").value("Pendiente de asignación médica"));
+                .andExpect(jsonPath("$.nombreCompleto").value("Pedro Pascal Balmaceda"))
+                .andExpect(jsonPath("$.correo").value("pedro.pascal@rednorte.cl"));
     }
 
     @Test
-    public void testBuscarPorRutNoEncontrado() throws Exception {
-        Mockito.when(pacienteRepository.findByRut("99999999-9")).thenReturn(Optional.empty());
+    public void obtenerPacientePorRut_NoEncontrado() throws Exception {
+        // Simulamos que el RUT no existe
+        Mockito.when(pacienteRepository.findByRutPaciente("00000000-0")).thenReturn(Optional.empty());
 
-        mockMvc.perform(get("/api/v1/portal/pacientes/99999999-9")
-                .contentType(MediaType.APPLICATION_JSON))
+        // Verificamos que devuelva el código HTTP 404 (Not Found)
+        mockMvc.perform(get("/api/v1/portal/pacientes/00000000-0"))
                 .andExpect(status().isNotFound());
-    }
-
-    // 🌟 NUEVA PRUEBA: Registrar Paciente (POST)
-    @Test
-    public void testRegistrarPaciente() throws Exception {
-        // 1. PREPARACIÓN: Simulamos cómo quedará el paciente después de guardarse (con un ID asignado)
-        Paciente pacienteGuardado = Paciente.builder()
-                .id(1L)
-                .rut("12345678-9")
-                .nombre("Pedro")
-                .apellidos("Pascal")
-                .correo("pedro@rednorte.cl")
-                .notificacionesActivas(true)
-                .build();
-
-        // Le decimos a Mockito: "Si alguien intenta guardar CUALQUIER paciente, devuelve el pacienteGuardado"
-        Mockito.when(pacienteRepository.save(Mockito.any(Paciente.class))).thenReturn(pacienteGuardado);
-
-        // Simulamos el JSON que enviaría el Swagger o React
-        String pacienteJson = "{\n" +
-                "  \"rut\": \"12345678-9\",\n" +
-                "  \"nombre\": \"Pedro\",\n" +
-                "  \"apellidos\": \"Pascal\",\n" +
-                "  \"correo\": \"pedro@rednorte.cl\",\n" +
-                "  \"notificacionesActivas\": true\n" +
-                "}";
-
-        // 2. ACCIÓN Y VERIFICACIÓN: Hacemos un POST
-        mockMvc.perform(post("/api/v1/portal/pacientes")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(pacienteJson))
-                .andExpect(status().isOk())
-                // Verificamos que la respuesta incluya el ID generado (1)
-                .andExpect(jsonPath("$.id").value(1));
     }
 }

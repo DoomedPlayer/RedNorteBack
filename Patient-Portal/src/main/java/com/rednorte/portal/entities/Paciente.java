@@ -6,31 +6,28 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data // Magia de Lombok: crea Getters y Setters automáticamente
-@Builder // Patrón de diseño para crear objetos fácilmente (útil para las pruebas de Ev3)
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity // Le dice a Spring Boot que esto será una tabla en MySQL
-@Table(name = "pacientes")
+@Entity
+@Table(name = "paciente")
 public class Paciente {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "rut_paciente", length = 20)
+    private String rutPaciente;
 
-    @Column(name = "rut", unique = true, nullable = false, length = 12)
-    private String rut;
+    @Column(name = "antecedentes_medicos", columnDefinition = "TEXT")
+    private String antecedentesMedicos;
 
-    @Column(name = "nombre", nullable = false, length = 50)
-    private String nombre;
-
-    @Column(name = "apellidos", nullable = false, length = 50)
-    private String apellidos;
-
-    @Column(name = "correo", nullable = false, length = 100)
-    private String correo;
-
-    // Dato extra útil para el portal: saber si el paciente tiene notificaciones pendientes
-    @Column(name = "notificaciones_activas")
-    private Boolean notificacionesActivas = false;
+    /*
+     * RELACIÓN 1 A 1 CON PERSONA
+     * @MapsId hace que la llave primaria de Paciente sea automáticamente 
+     * la llave foránea compartida con la tabla Persona (mismo RUT).
+     */
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "rut_paciente")
+    private Persona persona;
 }
