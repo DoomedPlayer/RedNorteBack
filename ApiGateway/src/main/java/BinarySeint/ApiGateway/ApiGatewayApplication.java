@@ -1,4 +1,4 @@
-package BinarySeint.ApiGateway;
+package com.rednorte.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
