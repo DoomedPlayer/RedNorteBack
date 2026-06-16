@@ -23,7 +23,7 @@ public class PortalController {
 
     @GetMapping("/pacientes/{rut}")
     @CircuitBreaker(name = "portalPacienteCB", fallbackMethod = "obtenerPacientePorRutFallback")
-    public ResponseEntity<PacienteDTO> obtenerPacientePorRut(@PathVariable String rut) {
+    public ResponseEntity<PacienteDTO> obtenerPacientePorRut(@PathVariable("rut") String rut) {
         
         // 1. Buscamos al paciente en la base de datos usando el nuevo método del Repositorio
         Optional<Paciente> pacienteOpt = pacienteRepository.findByRutPaciente(rut);

@@ -22,34 +22,37 @@ import reactor.core.publisher.Mono;
 @RequestMapping("api/bff")
 public class PacienteDashboardController {
 
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient webClient;
 
     public PacienteDashboardController(WebClient.Builder webClientBuilder) {
-        this.webClientBuilder = webClientBuilder;
+        this.webClient = webClientBuilder.build();
     }
 
     @GetMapping("/dashboard/{id}")
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
-    public Mono<DashboardDTO> getDashboardCompleto(@PathVariable String id) {
+    public Mono<DashboardDTO> getDashboardCompleto(@PathVariable("id") String id) { 
 
-        Mono<PacienteDTO> pacienteMono = webClientBuilder.build()
+        Mono<PacienteDTO> pacienteMono = webClient
                 .get()
                 .uri("http://localhost:8081/api/patients/" + id)
-                        .retrieve()
-                        .bodyToMono(PacienteDTO.class);
-        Mono<ListaEsperaDTO> esperaMono = webClientBuilder.build()
+                .retrieve()
+                .bodyToMono(PacienteDTO.class);
+                
+        Mono<ListaEsperaDTO> esperaMono = webClient
                 .get()
                 .uri("http://localhost:8082/api/waitlist/paciente/" + id)
                 .retrieve()
                 .bodyToMono(ListaEsperaDTO.class);
-        Mono<List<CitaMedicaDTO>> citaMono = webClientBuilder.build()
+                
+        Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()
                 .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/citas")
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
                 .onErrorReturn(new ArrayList<>());
-        Mono<List<DocumentoDTO>> documentoMono = webClientBuilder.build()
+                
+        Mono<List<DocumentoDTO>> documentoMono = webClient
                 .get()
                 .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/documentos")
                 .retrieve()

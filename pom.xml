@@ -3,7 +3,9 @@
     <groupId>com.rednorte</groupId>
     <artifactId>salud-rednorte-parent</artifactId>
     <version>1.0.0</version>
-    <packaging>pom</packaging> <modules>
+    <packaging>pom</packaging> 
+
+    <modules>
         <module>apigateway</module>
         <module>bff</module>
         <module>Waitlist-Service</module>
@@ -11,5 +13,38 @@
         <module>patient-portal</module>
     </modules>
 
-    </project>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version> <configuration>
+                    <excludes>
+                        <exclude>**/dto/**</exclude>
+                        <exclude>**/dtos/**</exclude>
+                        <exclude>**/model/**</exclude>
+                        <exclude>**/entities/**</exclude>
+                        <exclude>**/config/**</exclude>
+                        <exclude>**/*Application.class</exclude>
+                    </excludes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
     
