@@ -19,7 +19,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("api/bff")
+@RequestMapping("/api/v1/bff") // Corregido: Coincide exactamente con el Path del API Gateway
 public class PacienteDashboardController {
 
     private final WebClient.Builder webClientBuilder;
@@ -32,26 +32,33 @@ public class PacienteDashboardController {
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
     public Mono<DashboardDTO> getDashboardCompleto(@PathVariable String id) {
 
+        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
         Mono<PacienteDTO> pacienteMono = webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8081/api/patients/" + id)
-                        .retrieve()
-                        .bodyToMono(PacienteDTO.class);
+                .uri("http://patient-portal:8084/api/patients/" + id)
+                .retrieve()
+                .bodyToMono(PacienteDTO.class);
+
+        // Corregido: Apunta al contenedor 'waitlist-service' en su puerto interno 8081
         Mono<ListaEsperaDTO> esperaMono = webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8082/api/waitlist/paciente/" + id)
+                .uri("http://waitlist-service:8081/api/waitlist/paciente/" + id)
                 .retrieve()
                 .bodyToMono(ListaEsperaDTO.class);
+
+        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
         Mono<List<CitaMedicaDTO>> citaMono = webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/citas")
+                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/citas")
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
                 .onErrorReturn(new ArrayList<>());
+
+        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
         Mono<List<DocumentoDTO>> documentoMono = webClientBuilder.build()
                 .get()
-                .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/documentos")
+                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/documentos")
                 .retrieve()
                 .bodyToFlux(DocumentoDTO.class) 
                 .collectList()                  

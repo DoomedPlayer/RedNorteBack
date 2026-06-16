@@ -4,11 +4,11 @@
     <artifactId>salud-rednorte-parent</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging> <modules>
-        <module>apigateway</module>
-        <module>bff</module>
-        <module>Waitlist-Service</module>
+        <module>ApiGateway</module>
+        <module>BFF</module>
+        <module>waitlist-service</module>
         <module>AutoReasign-Service</module>
-        <module>patient-portal</module>
+        <module>Patient-Portal</module>
     </modules>
 
     </project>
