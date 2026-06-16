@@ -1,0 +1,118 @@
+services:
+  # ========================================================
+  # MOTOR DE BASE DE DATOS UNIFICADO (Con inicialización de múltiples BDs)
+  # ========================================================
+  mysql-db:
+    image: mysql:8.0
+    container_name: rednorte_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Aquí es donde Docker lee el script init.sql para crear las 3 BDs separadas
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - rednorte-network
+
+  # ========================================================
+  # MICROSERVICIOS DE LA PLATAFORMA
+  # ========================================================
+  
+  patient-portal:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: patient_portal_service
+    ports:
+      - "8084:8084"
+    command: java -jar /app/Patient-Portal/target/patient-portal-service-0.0.1-SNAPSHOT.jar
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_patient_portal?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - mysql-db
+    networks:
+      - rednorte-network
+
+  waitlist-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: waitlist_service
+    ports:
+      - "8081:8081"
+    command: java -jar /app/waitlist-service/target/Waitlist-Service-0.0.1-SNAPSHOT.jar
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_waitlist?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - mysql-db
+    networks:
+      - rednorte-network
+
+  auto-reasign-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: auto_reasign_service
+    ports:
+      - "8083:8083"
+    command: java -jar /app/AutoReasign-Service/target/AutoReasign-Service-0.0.1-SNAPSHOT.jar
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_reasignacion?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+    depends_on:
+      - mysql-db
+    networks:
+      - rednorte-network
+
+  bff-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bff_service
+    ports:
+      - "8082:8082"
+    command: java -jar /app/BFF/target/BFF-0.0.1-SNAPSHOT.jar
+    environment:
+      - PATIENT_PORTAL_URI=http://patient-portal:8084
+      - WAITLIST_URI=http://waitlist-service:8081
+    depends_on:
+      - patient-portal
+      - waitlist-service
+    networks:
+      - rednorte-network
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: api_gateway
+    ports:
+      - "8080:8080"
+    command: java -jar /app/ApiGateway/target/api-gateway-0.0.1-SNAPSHOT.jar
+    environment:
+      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://bff-service:8082
+      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://patient-portal:8084
+      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://waitlist-service:8081
+      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://auto-reasign-service:8083
+    depends_on:
+      - bff-service
+      - auto-reasign-service
+    networks:
+      - rednorte-network
+
+volumes:
+  mysql_data:
+
+networks:
+  rednorte-network:
+    driver: bridge
