@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "*") 
 @RequestMapping("/api/espera")
 public class WaitlistController {
 
@@ -22,7 +23,6 @@ public class WaitlistController {
     @PostMapping("/registrar")
     @CircuitBreaker(name = "waitlistCB", fallbackMethod = "registrarPacienteFallback")
     public ResponseEntity<RegistroEspera> registrarPaciente(@RequestBody Map<String, Object> request) {
-        // Parseamos el dato a Integer para pasarlo al servicio
         Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
         
         RegistroEspera registrado = service.registrarPaciente(

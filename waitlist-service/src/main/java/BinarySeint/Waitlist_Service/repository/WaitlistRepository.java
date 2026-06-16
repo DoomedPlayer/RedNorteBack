@@ -9,6 +9,5 @@ import java.util.List;
 @Repository
 public interface WaitlistRepository extends JpaRepository<RegistroEspera, Long> {
     
-    // Actualizado para buscar por IdEspecialidad (Integer) en lugar de un String
     List<RegistroEspera> findByIdEspecialidadAndEstadoOrderByNivelPrioridadAscFechaIngresoAsc(Integer idEspecialidad, String estado);
 }

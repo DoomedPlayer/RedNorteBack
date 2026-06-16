@@ -10,7 +10,7 @@ public class WaitlistFactory {
         registro.setRutPaciente(rut);
         registro.setIdEspecialidad(idEspecialidad);
         registro.setFechaIngreso(LocalDate.now()); 
-        registro.setEstado("En espera"); // Nuevo estándar de texto
+        registro.setEstado("En espera"); 
         
         switch (tipoAtencion.toUpperCase()) {
             case "URGENCIA":
