@@ -19,7 +19,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("api/bff")
+@RequestMapping("/api/v1/bff") // Corregido: Coincide exactamente con el Path del API Gateway
 public class PacienteDashboardController {
 
     private final WebClient webClient;
@@ -40,13 +40,13 @@ public class PacienteDashboardController {
                 
         Mono<ListaEsperaDTO> esperaMono = webClient
                 .get()
-                .uri("http://localhost:8082/api/waitlist/paciente/" + id)
+                .uri("http://waitlist-service:8081/api/waitlist/paciente/" + id)
                 .retrieve()
                 .bodyToMono(ListaEsperaDTO.class);
                 
         Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()
-                .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/citas")
+                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/citas")
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
@@ -54,7 +54,7 @@ public class PacienteDashboardController {
                 
         Mono<List<DocumentoDTO>> documentoMono = webClient
                 .get()
-                .uri("http://localhost:8081/api/v1/portal/pacientes/" + id + "/documentos")
+                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/documentos")
                 .retrieve()
                 .bodyToFlux(DocumentoDTO.class) 
                 .collectList()                  
