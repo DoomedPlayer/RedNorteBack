@@ -3,10 +3,7 @@ package BinarySeint.BFF.controller;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.rednorte.portal.dtos.CitaMedicaDTO;
@@ -19,7 +16,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/bff") // Corregido: Coincide exactamente con el Path del API Gateway
+@RequestMapping("/api/v1/bff") // Coincide exactamente con el Path de tu API Gateway
+@CrossOrigin(origins = "http://localhost:3000") // Habilita el tráfico seguro desde React
 public class PacienteDashboardController {
 
     private final WebClient.Builder webClientBuilder;
@@ -28,25 +26,29 @@ public class PacienteDashboardController {
         this.webClientBuilder = webClientBuilder;
     }
 
+    // =========================================================================
+    // 1. LEER: Carga paralela del Dashboard Completo
+    // =========================================================================
     @GetMapping("/dashboard/{id}")
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
     public Mono<DashboardDTO> getDashboardCompleto(@PathVariable String id) {
 
-        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
+        // Datos Personales (patient-portal)
         Mono<PacienteDTO> pacienteMono = webClientBuilder.build()
                 .get()
                 .uri("http://patient-portal:8084/api/patients/" + id)
                 .retrieve()
                 .bodyToMono(PacienteDTO.class);
 
-        // Corregido: Apunta al contenedor 'waitlist-service' en su puerto interno 8081
+        // Corregido: Apunta a tu ruta real /api/espera/lista/{id} en el puerto 8081
         Mono<ListaEsperaDTO> esperaMono = webClientBuilder.build()
                 .get()
-                .uri("http://waitlist-service:8081/api/waitlist/paciente/" + id)
+                .uri("http://waitlist-service:8081/api/espera/lista/" + id)
                 .retrieve()
-                .bodyToMono(ListaEsperaDTO.class);
+                .bodyToMono(ListaEsperaDTO.class)
+                .onErrorReturn(new ListaEsperaDTO()); // Evita que caiga todo el dashboard si falla la lista
 
-        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
+        // Historial de Citas (patient-portal)
         Mono<List<CitaMedicaDTO>> citaMono = webClientBuilder.build()
                 .get()
                 .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/citas")
@@ -55,7 +57,7 @@ public class PacienteDashboardController {
                 .collectList()                  
                 .onErrorReturn(new ArrayList<>());
 
-        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
+        // Documentos Médicos (patient-portal)
         Mono<List<DocumentoDTO>> documentoMono = webClientBuilder.build()
                 .get()
                 .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/documentos")
@@ -75,6 +77,32 @@ public class PacienteDashboardController {
                 });
     }
 
+    // =========================================================================
+    // 2. ACCIÓN: Agendar / Registrar Paciente en Lista de Espera
+    // =========================================================================
+    @PostMapping("/paciente/agendar")
+    public Mono<Object> agendarHora(@RequestBody Object datosRegistro) {
+        return webClientBuilder.build()
+                .post()
+                .uri("http://waitlist-service:8081/api/espera/registrar")
+                .bodyValue(datosRegistro)
+                .retrieve()
+                .bodyToMono(Object.class);
+    }
+
+    // =========================================================================
+    // 3. ACCIÓN: Anular / Cancelar Cita Médica Existente
+    // =========================================================================
+    @PostMapping("/paciente/anular/{idCita}")
+    public Mono<String> anularHora(@PathVariable Long idCita) {
+        return webClientBuilder.build()
+                .post()
+                .uri("http://auto-reasign-service:8083/api/citas/" + idCita + "/cancelar")
+                .retrieve()
+                .bodyToMono(String.class);
+    }
+
+    // Fallback en caso de que falle el circuito principal
     public Mono<DashboardDTO> getDashboardCompletoFallback(String id, Throwable t) {
         PacienteDTO pacienteError = PacienteDTO.builder()
                 .rut(id)
