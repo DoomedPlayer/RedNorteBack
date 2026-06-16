@@ -2,6 +2,8 @@ package BinarySeint.Waitlist_Service.controller;
 
 import BinarySeint.Waitlist_Service.model.RegistroEspera;
 import BinarySeint.Waitlist_Service.service.WaitlistService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ public class WaitlistController {
     private WaitlistService service;
 
     @PostMapping("/registrar")
+    @CircuitBreaker(name = "waitlistCB", fallbackMethod = "registrarPacienteFallback")
     public ResponseEntity<RegistroEspera> registrarPaciente(@RequestBody Map<String, Object> request) {
         // Parseamos el dato a Integer para pasarlo al servicio
         Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
@@ -30,10 +33,13 @@ public class WaitlistController {
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
     }
 
-    // Ahora la URL recibe un número de especialidad: GET /api/espera/lista/1
     @GetMapping("/lista/{idEspecialidad}")
     public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable Integer idEspecialidad) {
         List<RegistroEspera> lista = service.obtenerListaPorEspecialidad(idEspecialidad);
         return ResponseEntity.ok(lista);
+    }
+
+    public ResponseEntity<RegistroEspera> registrarPacienteFallback(Map<String, Object> request, Throwable t) {
+        return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
     }
 }

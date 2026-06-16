@@ -14,3 +14,11 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      portalPacienteCB:
+        slidingWindowSize: 10
+        failureRateThreshold: 40
+        waitDurationInOpenState: 10s

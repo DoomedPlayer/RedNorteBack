@@ -15,6 +15,7 @@ import com.rednorte.portal.dtos.PacienteDTO;
 
 import BinarySeint.BFF.dto.DashboardDTO;
 import BinarySeint.Waitlist_Service.dto.ListaEsperaDTO;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -28,6 +29,7 @@ public class PacienteDashboardController {
     }
 
     @GetMapping("/dashboard/{id}")
+    @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
     public Mono<DashboardDTO> getDashboardCompleto(@PathVariable String id) {
 
         Mono<PacienteDTO> pacienteMono = webClientBuilder.build()
@@ -65,5 +67,14 @@ public class PacienteDashboardController {
                     return new DashboardDTO(paciente, listaEspera, citas, documentos);
                 });
     }
-        
+
+    public Mono<DashboardDTO> getDashboardCompletoFallback(String id, Throwable t) {
+        PacienteDTO pacienteError = PacienteDTO.builder()
+                .rut(id)
+                .nombreCompleto("Servicio no disponible")
+                .correo("-")
+                .estadoListaEspera("Error de conexión temporal")
+                .build();
+        return Mono.just(new DashboardDTO(pacienteError, null, new ArrayList<>(), new ArrayList<>()));
+    }    
 }

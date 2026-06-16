@@ -2,6 +2,8 @@ package BinarySeint.AutoReasign_Service.controller;
 
 import BinarySeint.AutoReasign_Service.model.CitaMedica;
 import BinarySeint.AutoReasign_Service.service.CitaMedicaService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ public class CitaMedicaController {
 
     // C - CREAR
     @PostMapping
+    @CircuitBreaker(name = "citaMedicaCB", fallbackMethod = "crearCitaFallback")
     public ResponseEntity<CitaMedica> crearCita(@RequestBody CitaMedica cita) {
         CitaMedica nuevaCita = citaMedicaService.crearCita(cita);
         return new ResponseEntity<>(nuevaCita, HttpStatus.CREATED);
@@ -48,8 +51,18 @@ public class CitaMedicaController {
     }
 
     @PostMapping("/{id}/cancelar")
+    @CircuitBreaker(name = "citaMedicaCB", fallbackMethod = "cancelarCitaFallback")
     public ResponseEntity<String> cancelarCita(@PathVariable Long id) {
         String resultado = citaMedicaService.cancelarCita(id);
         return ResponseEntity.ok(resultado);
+    }
+
+    public ResponseEntity<CitaMedica> crearCitaFallback(CitaMedica cita, Throwable t) {
+        return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    public ResponseEntity<String> cancelarCitaFallback(Long id, Throwable t) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body("No se pudo procesar la cancelación de la cita " + id + " en este momento. Intente más tarde.");
     }
 }
