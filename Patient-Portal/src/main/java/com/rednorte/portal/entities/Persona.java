@@ -36,6 +36,17 @@ public class Persona {
     @Column(name = "email", nullable = false, length = 100)
     private String email;
 
+    // Mantienes tu ID original por si acaso
     @Column(name = "id_direccion")
     private Integer idDireccion;
+
+    // NUEVOS CAMPOS ADAPTADOS A LA VISTA DEL PORTAL
+    @Column(name = "direccion_texto", length = 255)
+    private String direccionTexto;
+
+    @Column(name = "contacto_emergencia_nombre", length = 100)
+    private String contactoEmergenciaNombre;
+
+    @Column(name = "contacto_emergencia_telefono", length = 20)
+    private String contactoEmergenciaTelefono;
 }

@@ -1,22 +1,19 @@
 package com.rednorte.portal.dtos;
 
+public class ActualizarDatosDTO {
+    
+}
+package com.rednorte.portal.dtos;
+
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PacienteDTO {
-    private String rut;
-    private String nombreCompleto; 
+public class ActualizarDatosDTO {
     private String correo;
-    private Boolean alertasActivas;
-    private String estadoListaEspera; 
-    
-    // NUEVOS CAMPOS DE CONTACTO DE PACIENTE SINCRONIZADOS CON LA VISTA
     private String telefono;
     private String direccion;
     private String contactoEmergenciaNombre;

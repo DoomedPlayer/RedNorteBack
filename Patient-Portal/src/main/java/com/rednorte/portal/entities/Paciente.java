@@ -26,7 +26,7 @@ public class Paciente {
      * @MapsId hace que la llave primaria de Paciente sea automáticamente 
      * la llave foránea compartida con la tabla Persona (mismo RUT).
      */
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "rut_paciente")
     private Persona persona;
