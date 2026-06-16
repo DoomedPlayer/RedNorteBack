@@ -3,7 +3,11 @@ package com.rednorte.portal.controllers;
 import com.rednorte.portal.dtos.PacienteDTO;
 import com.rednorte.portal.entities.Paciente;
 import com.rednorte.portal.repositories.PacienteRepository;
+
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +22,7 @@ public class PortalController {
     private PacienteRepository pacienteRepository;
 
     @GetMapping("/pacientes/{rut}")
+    @CircuitBreaker(name = "portalPacienteCB", fallbackMethod = "obtenerPacientePorRutFallback")
     public ResponseEntity<PacienteDTO> obtenerPacientePorRut(@PathVariable String rut) {
         
         // 1. Buscamos al paciente en la base de datos usando el nuevo método del Repositorio
@@ -45,5 +50,15 @@ public class PortalController {
             // Si no se encuentra el RUT, devolvemos un error 404
             return ResponseEntity.notFound().build();
         }
+    }
+
+    public ResponseEntity<PacienteDTO> obtenerPacientePorRutFallback(String rut, Throwable t) {
+        PacienteDTO dtoContingencia = PacienteDTO.builder()
+                .rut(rut)
+                .nombreCompleto("Sistema de consulta degradado")
+                .correo("N/A")
+                .estadoListaEspera("No se pudo verificar el estado debido a intermitencias")
+                .build();
+        return ResponseEntity.status(HttpStatus.PARTIAL_CONTENT).body(dtoContingencia);
     }
 }
