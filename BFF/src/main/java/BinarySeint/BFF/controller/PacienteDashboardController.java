@@ -22,41 +22,37 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/api/v1/bff") // Corregido: Coincide exactamente con el Path del API Gateway
 public class PacienteDashboardController {
 
-    private final WebClient.Builder webClientBuilder;
+    private final WebClient webClient;
 
     public PacienteDashboardController(WebClient.Builder webClientBuilder) {
-        this.webClientBuilder = webClientBuilder;
+        this.webClient = webClientBuilder.build();
     }
 
     @GetMapping("/dashboard/{id}")
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
-    public Mono<DashboardDTO> getDashboardCompleto(@PathVariable String id) {
+    public Mono<DashboardDTO> getDashboardCompleto(@PathVariable("id") String id) { 
 
-        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
-        Mono<PacienteDTO> pacienteMono = webClientBuilder.build()
+        Mono<PacienteDTO> pacienteMono = webClient
                 .get()
-                .uri("http://patient-portal:8084/api/patients/" + id)
+                .uri("http://localhost:8081/api/patients/" + id)
                 .retrieve()
                 .bodyToMono(PacienteDTO.class);
-
-        // Corregido: Apunta al contenedor 'waitlist-service' en su puerto interno 8081
-        Mono<ListaEsperaDTO> esperaMono = webClientBuilder.build()
+                
+        Mono<ListaEsperaDTO> esperaMono = webClient
                 .get()
                 .uri("http://waitlist-service:8081/api/waitlist/paciente/" + id)
                 .retrieve()
                 .bodyToMono(ListaEsperaDTO.class);
-
-        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
-        Mono<List<CitaMedicaDTO>> citaMono = webClientBuilder.build()
+                
+        Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()
                 .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/citas")
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
                 .onErrorReturn(new ArrayList<>());
-
-        // Corregido: Apunta al contenedor 'patient-portal' en su puerto interno 8084
-        Mono<List<DocumentoDTO>> documentoMono = webClientBuilder.build()
+                
+        Mono<List<DocumentoDTO>> documentoMono = webClient
                 .get()
                 .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/documentos")
                 .retrieve()
