@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication; // <-- Nueva importación requerida
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
@@ -25,7 +26,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PacienteDashboardControllerTest {
 
-   @Mock
+    @Mock
     private WebClient webClient;
 
     @SuppressWarnings("rawtypes")
@@ -38,6 +39,9 @@ class PacienteDashboardControllerTest {
 
     @Mock
     private WebClient.ResponseSpec responseSpec;
+
+    @Mock
+    private Authentication authentication;
 
     private PacienteDashboardController controller;
 
@@ -67,7 +71,9 @@ class PacienteDashboardControllerTest {
         when(responseSpec.bodyToFlux(CitaMedicaDTO.class)).thenReturn(Flux.empty());
         when(responseSpec.bodyToFlux(DocumentoDTO.class)).thenReturn(Flux.empty());
 
-        DashboardDTO resultado = controller.getDashboardCompleto("11223344-5").block();
+        when(authentication.getName()).thenReturn("11223344-5");
+
+        DashboardDTO resultado = controller.getDashboardCompleto(authentication).block();
 
         assertNotNull(resultado);
         assertEquals("11223344-5", resultado.getRut());
@@ -78,7 +84,10 @@ class PacienteDashboardControllerTest {
 
     @Test
     void testGetDashboardCompletoFallback_RetornaDatosDeContingencia() {
-        DashboardDTO resultado = controller.getDashboardCompletoFallback("99887766-5", new RuntimeException("Timeout")).block();
+
+        when(authentication.getName()).thenReturn("99887766-5");
+
+        DashboardDTO resultado = controller.getDashboardCompletoFallback(authentication, new RuntimeException("Timeout")).block();
 
         assertNotNull(resultado);
         assertEquals("99887766-5", resultado.getRut());
