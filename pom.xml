@@ -10,6 +10,7 @@
         <module>waitlist-service</module>
         <module>AutoReasign-Service</module>
         <module>Patient-Portal</module>
+        <module>security</module>
     </modules>
 
     <build>
