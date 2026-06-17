@@ -3,6 +3,8 @@ package BinarySeint.BFF.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +21,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/bff") // Corregido: Coincide exactamente con el Path del API Gateway
+@RequestMapping("/api/v1/bff") 
+@PreAuthorize("hasRole('PACIENTE')")
 public class PacienteDashboardController {
 
     private final WebClient webClient;
@@ -28,25 +31,27 @@ public class PacienteDashboardController {
         this.webClient = webClientBuilder.build();
     }
 
-    @GetMapping("/dashboard/{id}")
+    @GetMapping("/dashboard")
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
-    public Mono<DashboardDTO> getDashboardCompleto(@PathVariable("id") String id) { 
+    public Mono<DashboardDTO> getDashboardCompleto(Authentication authentication) { 
+
+        String rutId = authentication.getName();
 
         Mono<PacienteDTO> pacienteMono = webClient
                 .get()
-                .uri("http://localhost:8081/api/patients/" + id)
+                .uri("http://localhost:8081/api/patients/" + rutId)
                 .retrieve()
                 .bodyToMono(PacienteDTO.class);
                 
         Mono<ListaEsperaDTO> esperaMono = webClient
                 .get()
-                .uri("http://waitlist-service:8081/api/waitlist/paciente/" + id)
+                .uri("http://waitlist-service:8081/api/waitlist/paciente/" + rutId)
                 .retrieve()
                 .bodyToMono(ListaEsperaDTO.class);
                 
         Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()
-                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/citas")
+                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + rutId + "/citas")
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
@@ -54,7 +59,7 @@ public class PacienteDashboardController {
                 
         Mono<List<DocumentoDTO>> documentoMono = webClient
                 .get()
-                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + id + "/documentos")
+                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + rutId + "/documentos")
                 .retrieve()
                 .bodyToFlux(DocumentoDTO.class) 
                 .collectList()                  
@@ -71,13 +76,16 @@ public class PacienteDashboardController {
                 });
     }
 
-    public Mono<DashboardDTO> getDashboardCompletoFallback(String id, Throwable t) {
+    public Mono<DashboardDTO> getDashboardCompletoFallback(Authentication authentication, Throwable t) {
+
+        String rutId = (authentication != null) ? authentication.getName() : "Desconocido";
+
         PacienteDTO pacienteError = PacienteDTO.builder()
-                .rut(id)
+                .rut(rutId)
                 .nombreCompleto("Servicio no disponible")
                 .correo("-")
                 .estadoListaEspera("Error de conexión temporal")
                 .build();
         return Mono.just(new DashboardDTO(pacienteError, null, new ArrayList<>(), new ArrayList<>()));
-    }    
+    }   
 }
