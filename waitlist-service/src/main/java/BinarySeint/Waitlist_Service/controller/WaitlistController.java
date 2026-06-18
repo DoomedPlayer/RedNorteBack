@@ -34,7 +34,7 @@ public class WaitlistController {
     }
 
     @GetMapping("/lista/{idEspecialidad}")
-    public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable Integer idEspecialidad) {
+    public ResponseEntity<List<RegistroEspera>> obtenerLista(@PathVariable("idEspecialidad") Integer idEspecialidad) {
         List<RegistroEspera> lista = service.obtenerListaPorEspecialidad(idEspecialidad);
         return ResponseEntity.ok(lista);
     }

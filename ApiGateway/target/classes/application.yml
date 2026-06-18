@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # RUTA DE AUTENTICACIÓN (Nueva)
+        - id: auth-service
+          uri: http://bff-service:8082
+          predicates:
+            - Path=/api/v1/auth/**
+
+        # TUS OTRAS RUTAS
+        - id: bff-service
+          uri: http://bff-service:8082
+          predicates:
+            - Path=/api/v1/bff/**
+
+        - id: patient-portal-service
+          uri: http://patient-portal:8084
+          predicates:
+            - Path=/api/v1/portal/**
+
+        - id: waitlist-service
+          uri: http://waitlist-service:8081
+          predicates:
+            - Path=/api/espera/**
+
+        - id: auto-reasign-service
+          uri: http://auto-reasign-service:8083
+          predicates:
+            - Path=/api/reasignacion/**
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:3000"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"

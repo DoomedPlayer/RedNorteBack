@@ -33,26 +33,26 @@ public class CitaMedicaController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CitaMedica> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<CitaMedica> obtenerPorId(@PathVariable("id") Long id) {
         CitaMedica cita = citaMedicaService.obtenerCitaPorId(id);
         return ResponseEntity.ok(cita);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CitaMedica> actualizarCita(@PathVariable Long id, @RequestBody CitaMedica datosActualizados) {
+    public ResponseEntity<CitaMedica> actualizarCita(@PathVariable("id") Long id, @RequestBody CitaMedica datosActualizados) {
         CitaMedica citaEditada = citaMedicaService.actualizarCita(id, datosActualizados);
         return ResponseEntity.ok(citaEditada);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarCita(@PathVariable Long id) {
+    public ResponseEntity<Void> eliminarCita(@PathVariable("id") Long id) {
         citaMedicaService.eliminarCita(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/cancelar")
     @CircuitBreaker(name = "citaMedicaCB", fallbackMethod = "cancelarCitaFallback")
-    public ResponseEntity<String> cancelarCita(@PathVariable Long id) {
+    public ResponseEntity<String> cancelarCita(@PathVariable("id") Long id) {
         String resultado = citaMedicaService.cancelarCita(id);
         return ResponseEntity.ok(resultado);
     }
