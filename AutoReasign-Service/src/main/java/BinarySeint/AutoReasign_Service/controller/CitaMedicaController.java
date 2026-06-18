@@ -13,12 +13,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/citas")
+@CrossOrigin(origins = "http://localhost:3000") // Asegura compatibilidad CORS con React
 public class CitaMedicaController {
 
     @Autowired
     private CitaMedicaService citaMedicaService;
 
-    // C - CREAR
     @PostMapping
     @CircuitBreaker(name = "citaMedicaCB", fallbackMethod = "crearCitaFallback")
     public ResponseEntity<CitaMedica> crearCita(@RequestBody CitaMedica cita) {
@@ -57,6 +57,7 @@ public class CitaMedicaController {
         return ResponseEntity.ok(resultado);
     }
 
+    // Corregido: Se agregó el parámetro Throwable t para interceptar la excepción correctamente
     public ResponseEntity<CitaMedica> crearCitaFallback(CitaMedica cita, Throwable t) {
         return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
     }
