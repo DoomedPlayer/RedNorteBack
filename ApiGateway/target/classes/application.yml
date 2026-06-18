@@ -7,13 +7,11 @@ spring:
   cloud:
     gateway:
       routes:
-        # RUTA DE AUTENTICACIÓN (Nueva)
         - id: auth-service
-          uri: http://bff-service:8082
+          uri: http://auth-service:8085
           predicates:
             - Path=/api/v1/auth/**
 
-        # TUS OTRAS RUTAS
         - id: bff-service
           uri: http://bff-service:8082
           predicates:
