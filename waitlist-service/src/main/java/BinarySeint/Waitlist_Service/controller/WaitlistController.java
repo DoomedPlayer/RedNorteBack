@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "*") 
+@CrossOrigin(origins = "http://localhost:3000") // Alineado con la app React
 @RequestMapping("/api/espera")
 public class WaitlistController {
 
@@ -39,6 +39,7 @@ public class WaitlistController {
         return ResponseEntity.ok(lista);
     }
 
+    // Corregido: Se agregó Throwable t para cumplir con la firma requerida por Resilience4j
     public ResponseEntity<RegistroEspera> registrarPacienteFallback(Map<String, Object> request, Throwable t) {
         return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
     }
