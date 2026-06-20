@@ -4,22 +4,28 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import com.rednorte.security.dto.AuthResponse;
 import com.rednorte.security.dto.LoginRequest;
+import com.rednorte.security.dto.RegisterRequest;
+import com.rednorte.security.entity.Rol;
 import com.rednorte.security.entity.Usuario;
 import com.rednorte.security.repository.UsuarioRepository;
 import com.rednorte.security.services.JwtService;
 
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
@@ -34,5 +40,33 @@ public class AuthController {
         String token = jwtService.generateToken(usuario);
 
         return ResponseEntity.ok(new AuthResponse(token));
+    }
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+
+        if (usuarioRepository.findByRutPersona(request.getRut()).isPresent()) {
+            return ResponseEntity.badRequest().body("El RUT ya se encuentra registrado en el sistema de acceso.");
+        }
+
+        // 2. Guardar credenciales en db_auth
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setRutPersona(request.getRut());
+        nuevoUsuario.setEmail(request.getCorreo());
+        nuevoUsuario.setPassword(passwordEncoder.encode(request.getPassword()));
+        nuevoUsuario.setRol(Rol.PACIENTE); // Usando tu Enum
+        
+        usuarioRepository.save(nuevoUsuario);
+
+        try {
+            String portalUrl = "http://patient-portal:8084/api/v1/portal/pacientes/registro-perfil";
+            restTemplate.postForEntity(portalUrl, request, String.class);
+        } catch (Exception e) {
+
+            System.err.println("Advertencia: No se pudo crear el perfil en patient-portal: " + e.getMessage());
+        }
+
+        String token = jwtService.generateToken(nuevoUsuario);
+        return ResponseEntity.ok(new AuthResponse(token));
+    
     }
 }

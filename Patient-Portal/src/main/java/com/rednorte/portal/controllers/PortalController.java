@@ -4,7 +4,9 @@ import com.rednorte.portal.dtos.PacienteDTO;
 import com.rednorte.portal.dtos.CitaMedicaDTO;
 import com.rednorte.portal.dtos.DocumentoDTO;
 import com.rednorte.portal.entities.Paciente;
+import com.rednorte.portal.entities.Persona;
 import com.rednorte.portal.repositories.PacienteRepository;
+import com.rednorte.portal.repositories.PersonaRepository;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 
@@ -15,19 +17,22 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000") // Permite conexión directa con React
 public class PortalController {
 
     @Autowired
     private PacienteRepository pacienteRepository;
 
+    @Autowired
+    private PersonaRepository personaRepository;
+
     // =========================================================================
     // 1. ENDPOINT DE INFORMACIÓN PERSONAL (BFF: /api/patients/{id})
     // =========================================================================
-    @GetMapping("/api/patients/{rut}")
+    @GetMapping("/api/portal/patients/{rut}")
     @CircuitBreaker(name = "portalPacienteCB", fallbackMethod = "obtenerPacientePorRutFallback")
     public ResponseEntity<PacienteDTO> obtenerPacientePorRut(@PathVariable("rut") String rut) {
         
@@ -54,27 +59,6 @@ public class PortalController {
     }
 
     // =========================================================================
-    // 2. ENDPOINT DE CITAS MÉDICAS (BFF: /api/v1/portal/pacientes/{id}/citas)
-    // =========================================================================
-    @GetMapping("/api/v1/portal/pacientes/{rut}/citas")
-    public ResponseEntity<List<CitaMedicaDTO>> obtenerCitasPaciente(@PathVariable String rut) {
-        List<CitaMedicaDTO> citas = new ArrayList<>();
-        
-        // TODO: Aquí debes llamar a tu repositorio real de citas filtrando por el RUT
-        // Ejemplo de datos de prueba para la vista del profesor:
-        /*
-        citas.add(CitaMedicaDTO.builder()
-                .especialidad("Cardiología")
-                .doctor("Dr. Alejandro Sanz")
-                .fecha("20-05-2026 10:00 a. m.")
-                .box("Box A-12")
-                .build());
-        */
-        
-        return ResponseEntity.ok(citas);
-    }
-
-    // =========================================================================
     // 3. ENDPOINT DE DOCUMENTOS/RECETAS (BFF: /api/v1/portal/pacientes/{id}/documentos)
     // =========================================================================
     @GetMapping("/api/v1/portal/pacientes/{rut}/documentos")
@@ -92,6 +76,58 @@ public class PortalController {
         */
         
         return ResponseEntity.ok(documentos);
+    }
+
+    @PostMapping("/api/v1/portal/pacientes/registro-perfil")
+    public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, String> requestData) {
+
+        Persona persona = Persona.builder()
+                .rut(requestData.get("rut"))
+                .primerNombre(requestData.get("nombre"))
+                .apellidoPaterno(requestData.get("apellidoPaterno"))
+                .apellidoMaterno(requestData.get("apellidoMaterno"))
+                .email(requestData.get("correo"))
+                .telefono(requestData.get("telefono"))
+                .build();
+
+        personaRepository.save(persona);
+        
+        Paciente paciente = Paciente.builder()
+                .rutPaciente(requestData.get("rut"))
+                .persona(persona)
+                .antecedentesMedicos("Sin antecedentes registrados")
+                // Mapeamos los datos de emergencia que vienen desde React -> Auth -> Portal
+                .contactoEmergenciaNombre(requestData.get("contactoEmergenciaNombre"))
+                .contactoEmergenciaParentesco(requestData.get("contactoEmergenciaParentesco"))
+                .contactoEmergenciaTelefono(requestData.get("contactoEmergenciaTelefono"))
+                .build();
+
+        pacienteRepository.save(paciente);
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/api/portal/pacientes")
+    public ResponseEntity<List<PacienteDTO>> obtenerTodosLosPacientes() {
+        
+        List<Paciente> pacientes = pacienteRepository.findAll();
+        List<PacienteDTO> listaResponse = new ArrayList<>();
+
+        for (Paciente p : pacientes) {
+            String nombreCompleto = p.getPersona().getPrimerNombre() + " " + 
+                                    p.getPersona().getApellidoPaterno();
+            
+            PacienteDTO dto = PacienteDTO.builder()
+                    .rut(p.getRutPaciente())
+                    .nombreCompleto(nombreCompleto)
+                    .correo(p.getPersona().getEmail())
+                    .estadoListaEspera("Activo") 
+                    .build();
+                    
+            listaResponse.add(dto);
+        }
+
+        return ResponseEntity.ok(listaResponse);
     }
 
     // Fallback de Circuit Breaker para el perfil básico

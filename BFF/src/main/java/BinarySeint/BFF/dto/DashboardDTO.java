@@ -2,12 +2,6 @@ package BinarySeint.BFF.dto;
 
 import java.util.List;
 
-import com.rednorte.portal.dtos.PacienteDTO;
-import com.rednorte.portal.dtos.CitaMedicaDTO;
-import com.rednorte.portal.dtos.DocumentoDTO;
-import BinarySeint.Waitlist_Service.dto.ListaEsperaDTO;
-
-
 public class DashboardDTO {
 
     // 1. Bloque de Perfil del Paciente (Viene de Patient-Portal)

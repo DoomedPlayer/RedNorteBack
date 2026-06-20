@@ -32,7 +32,7 @@ class WaitlistServiceTest {
         
         when(repository.save(any(RegistroEspera.class))).thenReturn(dummyRegistro);
 
-        RegistroEspera resultado = waitlistService.registrarPaciente("12345678-9", 1, "Consulta");
+        RegistroEspera resultado = waitlistService.registrarPaciente("12345678-9", 1, "Consulta", true);
 
         assertNotNull(resultado);
         assertEquals("12345678-9", resultado.getRutPaciente());

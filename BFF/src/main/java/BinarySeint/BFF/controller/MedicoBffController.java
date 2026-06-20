@@ -1,11 +1,13 @@
 package BinarySeint.BFF.controller;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/v1/bff/medico")
+@PreAuthorize("hasRole('DOCTOR')")
 @CrossOrigin(origins = "*")
 public class MedicoBffController {
 

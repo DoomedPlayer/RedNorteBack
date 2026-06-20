@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "citas_medicas")
+@Table(name = "cita_medica")
 public class CitaMedica {
 
     @Id
@@ -18,14 +18,17 @@ public class CitaMedica {
     @Column(name = "especialidad_tipo")
     private String especialidadYTipo;
 
+    @Column(name = "medico")
     private String medico;
 
     @Column(name = "fecha_hora")
     private LocalDateTime fechaHora; 
 
+    @Column(name = "lugar")
     private String lugar;
 
-    private String estado; 
+    @Column(name = "estado")
+    private String estado;
 
     public CitaMedica() {
     }

@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -38,11 +39,12 @@ class WaitlistControllerTest {
         request.put("rutPaciente", "11223344-5");
         request.put("idEspecialidad", 1);
         request.put("tipoAtencion", "Control");
+        request.put("gesAuge", false);
 
         RegistroEspera dummy = new RegistroEspera();
         dummy.setRutPaciente("11223344-5");
 
-        when(waitlistService.registrarPaciente(anyString(), anyInt(), anyString())).thenReturn(dummy);
+        when(waitlistService.registrarPaciente(anyString(), anyInt(), anyString(), anyBoolean())).thenReturn(dummy);
 
         mockMvc.perform(post("/api/espera/registrar")
                 .contentType(MediaType.APPLICATION_JSON)

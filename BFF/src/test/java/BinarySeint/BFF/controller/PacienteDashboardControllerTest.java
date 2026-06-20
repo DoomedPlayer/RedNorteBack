@@ -1,10 +1,11 @@
 package BinarySeint.BFF.controller;
 
+import BinarySeint.BFF.dto.CitaMedicaDTO;
 import BinarySeint.BFF.dto.DashboardDTO;
-import BinarySeint.Waitlist_Service.dto.ListaEsperaDTO;
-import com.rednorte.portal.dtos.CitaMedicaDTO;
-import com.rednorte.portal.dtos.DocumentoDTO;
-import com.rednorte.portal.dtos.PacienteDTO;
+import BinarySeint.BFF.dto.DocumentoDTO;
+import BinarySeint.BFF.dto.ListaEsperaDTO;
+import BinarySeint.BFF.dto.PacienteDTO;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:3000") // Alineado con la app React
 @RequestMapping("/api/espera")
 public class WaitlistController {
 
@@ -24,13 +23,43 @@ public class WaitlistController {
     @CircuitBreaker(name = "waitlistCB", fallbackMethod = "registrarPacienteFallback")
     public ResponseEntity<RegistroEspera> registrarPaciente(@RequestBody Map<String, Object> request) {
         Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
+        boolean gesAuge = request.get("gesAuge") != null && Boolean.parseBoolean(request.get("gesAuge").toString());
         
         RegistroEspera registrado = service.registrarPaciente(
                 request.get("rutPaciente").toString(),
                 idEspecialidad,
-                request.get("tipoAtencion").toString()
+                request.get("tipoAtencion").toString(),
+                gesAuge
         );
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
+    }
+
+    @GetMapping("/paciente/{rut}")
+    @CircuitBreaker(name = "waitlistCB", fallbackMethod = "obtenerEsperaPacienteFallback")
+    public ResponseEntity<RegistroEspera> obtenerEsperaPorPaciente(@PathVariable("rut") String rut) {
+        RegistroEspera registro = service.obtenerRegistroPorRut(rut);
+        
+        if (registro != null) {
+            return ResponseEntity.ok(registro);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping("/paciente/{rut}")
+    public ResponseEntity<Void> eliminarDeListaEspera(@PathVariable("rut") String rut) {
+        boolean eliminado = service.eliminarRegistroPorRut(rut);
+        
+        if (eliminado) {
+            return ResponseEntity.noContent().build(); 
+        } else {
+            return ResponseEntity.notFound().build(); 
+        }
+    }
+
+    // Fallback específico para la consulta por paciente
+    public ResponseEntity<RegistroEspera> obtenerEsperaPacienteFallback(String rut, Throwable t) {
+        return new ResponseEntity<>(HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @GetMapping("/lista/{idEspecialidad}")

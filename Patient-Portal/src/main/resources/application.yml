@@ -2,18 +2,21 @@ server:
   port: 8084
 
 spring:
+  application:
+    name: patient-portal-service
   datasource:
-    url: jdbc:mysql://localhost:3306/rednorte_db?useSSL=false&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/db_patient_portal?useSSL=false&serverTimezone=UTC
     username: root
-    password: "" 
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: rootpassword
+
   jpa:
-    show-sql: true
     hibernate:
       ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
 
 resilience4j:
   circuitbreaker:

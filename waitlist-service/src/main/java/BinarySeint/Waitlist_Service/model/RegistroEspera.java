@@ -30,6 +30,9 @@ public class RegistroEspera {
     @Column(nullable = false)
     private String estado;
 
+    @Column(name = "ges_auge", nullable = false)
+    private boolean gesAuge;
+
     public RegistroEspera() {}
 
     // --- Getters y Setters ---
@@ -54,4 +57,7 @@ public class RegistroEspera {
 
     public String getEstado() { return estado; }
     public void setEstado(String estado) { this.estado = estado; }
+
+    public boolean isGesAuge() { return gesAuge; }
+    public void setGesAuge(boolean gesAuge) { this.gesAuge = gesAuge; }
 }

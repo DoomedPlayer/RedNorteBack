@@ -35,6 +35,10 @@ public class CitaMedicaService {
         return citaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cita no encontrada con el ID: " + id));
     }
+    
+    public List<CitaMedica> obtenerCitasPorRutPaciente(String rutPaciente) {
+        return citaRepository.findByRutPaciente(rutPaciente);
+    }
 
     @Transactional
     public CitaMedica actualizarCita(Long id, CitaMedica datosActualizados) {

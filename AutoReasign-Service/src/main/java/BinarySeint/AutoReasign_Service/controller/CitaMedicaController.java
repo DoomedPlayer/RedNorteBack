@@ -13,7 +13,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/citas")
-@CrossOrigin(origins = "http://localhost:3000") // Asegura compatibilidad CORS con React
 public class CitaMedicaController {
 
     @Autowired
@@ -29,6 +28,12 @@ public class CitaMedicaController {
     @GetMapping
     public ResponseEntity<List<CitaMedica>> obtenerTodas() {
         List<CitaMedica> citas = citaMedicaService.obtenerTodasLasCitas();
+        return ResponseEntity.ok(citas);
+    }
+
+    @GetMapping("/paciente/{rut}")
+    public ResponseEntity<List<CitaMedica>> obtenerCitasPorPaciente(@PathVariable("rut") String rut) {
+        List<CitaMedica> citas = citaMedicaService.obtenerCitasPorRutPaciente(rut);
         return ResponseEntity.ok(citas);
     }
 

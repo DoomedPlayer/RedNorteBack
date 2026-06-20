@@ -21,11 +21,15 @@ public class Paciente {
     @Column(name = "antecedentes_medicos", columnDefinition = "TEXT")
     private String antecedentesMedicos;
 
-    /*
-     * RELACIÓN 1 A 1 CON PERSONA
-     * @MapsId hace que la llave primaria de Paciente sea automáticamente 
-     * la llave foránea compartida con la tabla Persona (mismo RUT).
-     */
+    @Column(name = "contacto_emergencia_nombre", length = 100)
+    private String contactoEmergenciaNombre;
+
+    @Column(name = "contacto_emergencia_parentesco", length = 50)
+    private String contactoEmergenciaParentesco;
+
+    @Column(name = "contacto_emergencia_telefono", length = 20)
+    private String contactoEmergenciaTelefono;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "rut_paciente")

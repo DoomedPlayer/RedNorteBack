@@ -1,5 +1,6 @@
 package BinarySeint.BFF.controller;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,12 +12,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 
-import com.rednorte.portal.dtos.CitaMedicaDTO;
-import com.rednorte.portal.dtos.DocumentoDTO;
-import com.rednorte.portal.dtos.PacienteDTO;
-
+import BinarySeint.BFF.dto.CitaMedicaDTO;
 import BinarySeint.BFF.dto.DashboardDTO;
-import BinarySeint.Waitlist_Service.dto.ListaEsperaDTO;
+import BinarySeint.BFF.dto.DocumentoDTO;
+import BinarySeint.BFF.dto.RegistroEsperaBFF;
+import BinarySeint.BFF.dto.ListaEsperaDTO;
+import BinarySeint.BFF.dto.PacienteDTO;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import reactor.core.publisher.Mono;
 
@@ -39,19 +40,40 @@ public class PacienteDashboardController {
 
         Mono<PacienteDTO> pacienteMono = webClient
                 .get()
-                .uri("http://localhost:8081/api/patients/" + rutId)
+                .uri("http://patient-portal:8084/api/portal/patients/" + rutId)
                 .retrieve()
                 .bodyToMono(PacienteDTO.class);
                 
         Mono<ListaEsperaDTO> esperaMono = webClient
                 .get()
-                .uri("http://waitlist-service:8081/api/waitlist/paciente/" + rutId)
+                .uri("http://waitlist-service:8081/api/espera/paciente/" + rutId)
                 .retrieve()
-                .bodyToMono(ListaEsperaDTO.class);
+                .bodyToMono(RegistroEsperaBFF.class)
+                .map(registroRaw -> {
+                    // 1. Formatear la fecha
+                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                    String fechaFormateada = registroRaw.getFechaIngreso() != null ? registroRaw.getFechaIngreso().format(formatter) : "-";
+
+                    // 2. Traducir prioridad
+                    String textoPrioridad = "Normal";
+                    if (registroRaw.getNivelPrioridad() != null) {
+                        if (registroRaw.getNivelPrioridad() == 1) textoPrioridad = "Alta (Urgencia)";
+                        else if (registroRaw.getNivelPrioridad() <= 3) textoPrioridad = "Media - Alta";
+                    }
+
+                    // 3. Traducir estado
+                    String estadoFrontend = "En espera".equalsIgnoreCase(registroRaw.getEstado()) 
+                            ? "Pendiente de asignación médica" 
+                            : registroRaw.getEstado();
+
+                    // 4. Retornar el DTO final
+                    return new ListaEsperaDTO(estadoFrontend, fechaFormateada, textoPrioridad, registroRaw.isGesAuge());
+                })
+                .onErrorReturn(new ListaEsperaDTO("Sin registros", "-", "-", false));
                 
         Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()
-                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + rutId + "/citas")
+                .uri("http://auto-reasign_service:8083/api/citas/paciente/"+ rutId)
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
