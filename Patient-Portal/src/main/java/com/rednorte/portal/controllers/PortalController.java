@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
+@RequestMapping("/api/portal")
 public class PortalController {
 
     @Autowired
@@ -32,7 +33,7 @@ public class PortalController {
     // =========================================================================
     // 1. ENDPOINT DE INFORMACIÓN PERSONAL (BFF: /api/patients/{id})
     // =========================================================================
-    @GetMapping("/api/portal/patients/{rut}")
+    @GetMapping("/pacientes/{rut}")
     @CircuitBreaker(name = "portalPacienteCB", fallbackMethod = "obtenerPacientePorRutFallback")
     public ResponseEntity<PacienteDTO> obtenerPacientePorRut(@PathVariable("rut") String rut) {
         
@@ -49,7 +50,10 @@ public class PortalController {
                     .rut(paciente.getRutPaciente())
                     .nombreCompleto(nombreCompleto)
                     .correo(paciente.getPersona().getEmail())
-                    .estadoListaEspera("Pendiente de asignación médica") 
+                    .estadoListaEspera("Pendiente de asignación médica")
+                    .contactoEmergenciaNombre(paciente.getContactoEmergenciaNombre())
+                    .contactoEmergenciaParentesco(paciente.getContactoEmergenciaParentesco())
+                    .contactoEmergenciaTelefono(paciente.getContactoEmergenciaTelefono())
                     .build();
 
             return ResponseEntity.ok(responseDTO);
@@ -61,8 +65,8 @@ public class PortalController {
     // =========================================================================
     // 3. ENDPOINT DE DOCUMENTOS/RECETAS (BFF: /api/v1/portal/pacientes/{id}/documentos)
     // =========================================================================
-    @GetMapping("/api/v1/portal/pacientes/{rut}/documentos")
-    public ResponseEntity<List<DocumentoDTO>> obtenerDocumentosPaciente(@PathVariable String rut) {
+    @GetMapping("/pacientes/{rut}/documentos")
+    public ResponseEntity<List<DocumentoDTO>> obtenerDocumentosPaciente(@PathVariable("rut") String rut) {
         List<DocumentoDTO> documentos = new ArrayList<>();
         
         // TODO: Aquí debes llamar a tu repositorio real de recetas/exámenes por RUT
@@ -78,7 +82,7 @@ public class PortalController {
         return ResponseEntity.ok(documentos);
     }
 
-    @PostMapping("/api/v1/portal/pacientes/registro-perfil")
+    @PostMapping("/pacientes/registro-perfil")
     public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, String> requestData) {
 
         Persona persona = Persona.builder()
@@ -107,7 +111,7 @@ public class PortalController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/api/portal/pacientes")
+    @GetMapping("/pacientes")
     public ResponseEntity<List<PacienteDTO>> obtenerTodosLosPacientes() {
         
         List<Paciente> pacientes = pacienteRepository.findAll();

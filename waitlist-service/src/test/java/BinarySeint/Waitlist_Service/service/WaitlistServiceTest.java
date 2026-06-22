@@ -1,7 +1,12 @@
 package BinarySeint.Waitlist_Service.service;
 
-import BinarySeint.Waitlist_Service.model.RegistroEspera;
-import BinarySeint.Waitlist_Service.repository.WaitlistRepository;
+import BinarySeint.Waitlist_Service.factory.WaitlistFactoryMethod;
+import BinarySeint.Waitlist_Service.factory.WaitlistFactoryProvider;
+import BinarySeint.Waitlist_Service.model.ListaEspera;
+import BinarySeint.Waitlist_Service.model.RegistroPaciente;
+import BinarySeint.Waitlist_Service.repository.ListaEsperaRepository;
+import BinarySeint.Waitlist_Service.repository.RegistroPacienteRepository;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -18,36 +24,59 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class WaitlistServiceTest {
 
+    // Ahora inyectamos los repositorios y la fábrica correctos
     @Mock
-    private WaitlistRepository repository;
+    private ListaEsperaRepository listaEsperaRepo;
+
+    @Mock
+    private RegistroPacienteRepository registroPacienteRepo;
+
+    @Mock
+    private WaitlistFactoryProvider factoryProvider;
+
+    @Mock
+    private WaitlistFactoryMethod mockFactory;
 
     @InjectMocks
     private WaitlistService waitlistService;
 
     @Test
-    void testRegistrarPaciente_GuardaEnRepositorio() {
-        RegistroEspera dummyRegistro = new RegistroEspera();
-        dummyRegistro.setRutPaciente("12345678-9");
-        dummyRegistro.setIdEspecialidad(1);
+    void testRegistrarEnListaEspera_GuardaEnAmbosRepositorios() {
+        // 1. Configuramos el mock de la fábrica
+        when(factoryProvider.obtenerFabrica(anyString())).thenReturn(mockFactory);
         
-        when(repository.save(any(RegistroEspera.class))).thenReturn(dummyRegistro);
+        ListaEspera mockTicket = new ListaEspera();
+        mockTicket.setNivelPrioridad(2);
+        when(mockFactory.crearRegistro(anyString(), anyInt(), anyBoolean())).thenReturn(mockTicket);
 
-        RegistroEspera resultado = waitlistService.registrarPaciente("12345678-9", 1, "Consulta", true);
+        // 2. Configuramos el mock del perfil del paciente
+        RegistroPaciente dummyPaciente = new RegistroPaciente();
+        dummyPaciente.setRutPaciente("12345678-9");
+        when(registroPacienteRepo.findById(anyString())).thenReturn(Optional.empty());
+        when(registroPacienteRepo.save(any(RegistroPaciente.class))).thenReturn(dummyPaciente);
 
+        // 3. Ejecutamos el servicio
+        RegistroPaciente resultado = waitlistService.registrarEnListaEspera("12345678-9", 1, "Consulta", true);
+
+        // 4. Verificamos que se haya ejecutado todo correctamente
         assertNotNull(resultado);
         assertEquals("12345678-9", resultado.getRutPaciente());
-        verify(repository, times(1)).save(any(RegistroEspera.class));
+        
+        // Verificamos que se guardó el ticket y se guardó el perfil del paciente
+        verify(listaEsperaRepo, times(1)).save(any(ListaEspera.class));
+        verify(registroPacienteRepo, times(1)).save(any(RegistroPaciente.class));
     }
 
     @Test
     void testObtenerListaPorEspecialidad_RetornaLista() {
-        RegistroEspera dummy = new RegistroEspera();
-        when(repository.findByIdEspecialidadAndEstadoOrderByNivelPrioridadAscFechaIngresoAsc(1, "EN_ESPERA"))
+        ListaEspera dummy = new ListaEspera();
+        // Usamos el nombre del método correcto que no filtra por estado (porque ahora es exclusivo de la lista)
+        when(listaEsperaRepo.findByIdEspecialidadOrderByNivelPrioridadAscFechaIngresoAsc(1))
                 .thenReturn(Collections.singletonList(dummy));
 
-        List<RegistroEspera> lista = waitlistService.obtenerListaPorEspecialidad(1);
+        List<ListaEspera> lista = waitlistService.obtenerListaPorEspecialidad(1);
 
         assertFalse(lista.isEmpty());
-        verify(repository, times(1)).findByIdEspecialidadAndEstadoOrderByNivelPrioridadAscFechaIngresoAsc(1, "EN_ESPERA");
+        verify(listaEsperaRepo, times(1)).findByIdEspecialidadOrderByNivelPrioridadAscFechaIngresoAsc(1);
     }
 }

@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "registro_espera")
-public class RegistroEspera {
+@Table(name = "lista_espera")
+public class ListaEspera {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_registro")
-    private Long idRegistro;
+    @Column(name = "id_lista")
+    private Long idLista;
 
     @Column(name = "rut_paciente", nullable = false, length = 12)
     private String rutPaciente;
@@ -26,19 +26,14 @@ public class RegistroEspera {
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso; 
-    
-    @Column(nullable = false)
-    private String estado;
 
     @Column(name = "ges_auge", nullable = false)
     private boolean gesAuge;
+    
+    public ListaEspera() {}
 
-    public RegistroEspera() {}
-
-    // --- Getters y Setters ---
-
-    public Long getIdRegistro() { return idRegistro; }
-    public void setIdRegistro(Long idRegistro) { this.idRegistro = idRegistro; }
+    public Long getIdLista() { return idLista; }
+    public void setIdLista(Long idLista) { this.idLista = idLista; }
 
     public String getRutPaciente() { return rutPaciente; }
     public void setRutPaciente(String rutPaciente) { this.rutPaciente = rutPaciente; }
@@ -54,9 +49,6 @@ public class RegistroEspera {
 
     public LocalDate getFechaIngreso() { return fechaIngreso; }
     public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
-
-    public String getEstado() { return estado; }
-    public void setEstado(String estado) { this.estado = estado; }
 
     public boolean isGesAuge() { return gesAuge; }
     public void setGesAuge(boolean gesAuge) { this.gesAuge = gesAuge; }

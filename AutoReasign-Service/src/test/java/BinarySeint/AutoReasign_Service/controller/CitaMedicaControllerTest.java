@@ -1,12 +1,14 @@
 package BinarySeint.AutoReasign_Service.controller;
 
 import BinarySeint.AutoReasign_Service.model.CitaMedica;
+import BinarySeint.AutoReasign_Service.model.TipoAtencion;
 import BinarySeint.AutoReasign_Service.service.CitaMedicaService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -20,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(CitaMedicaController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class CitaMedicaControllerTest {
 
     @Autowired
@@ -38,7 +41,8 @@ class CitaMedicaControllerTest {
         citaDummy = new CitaMedica();
         citaDummy.setId(1L);
         citaDummy.setRutPaciente("11223344-5");
-        citaDummy.setEspecialidadYTipo("Cardiologia");
+        citaDummy.setEspecialidad("Cardiologia");
+        citaDummy.setTipoAtencion(TipoAtencion.CONTROL);
         citaDummy.setEstado("ACTIVA");
     }
 

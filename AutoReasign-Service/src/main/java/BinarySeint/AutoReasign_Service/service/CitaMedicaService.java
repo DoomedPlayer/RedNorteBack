@@ -1,5 +1,6 @@
 package BinarySeint.AutoReasign_Service.service;
 
+import BinarySeint.AutoReasign_Service.config.RabbitMQConfig;
 import BinarySeint.AutoReasign_Service.dto.EventoCancelacionDTO;
 import BinarySeint.AutoReasign_Service.model.CitaMedica;
 import BinarySeint.AutoReasign_Service.repository.CitaMedicaRepository;
@@ -40,12 +41,17 @@ public class CitaMedicaService {
         return citaRepository.findByRutPaciente(rutPaciente);
     }
 
+    public List<CitaMedica> obtenerCitasPorEspecialidad(String especialidad) {
+        return citaRepository.findByEspecialidad(especialidad);
+    }
+
     @Transactional
     public CitaMedica actualizarCita(Long id, CitaMedica datosActualizados) {
         CitaMedica citaExistente = obtenerCitaPorId(id);
         
         citaExistente.setRutPaciente(datosActualizados.getRutPaciente());
-        citaExistente.setEspecialidadYTipo(datosActualizados.getEspecialidadYTipo());
+        citaExistente.setEspecialidad(datosActualizados.getEspecialidad()); // <-- NUEVO
+        citaExistente.setTipoAtencion(datosActualizados.getTipoAtencion());
         citaExistente.setMedico(datosActualizados.getMedico());
         citaExistente.setFechaHora(datosActualizados.getFechaHora());
         citaExistente.setLugar(datosActualizados.getLugar());
@@ -63,16 +69,18 @@ public class CitaMedicaService {
     @Transactional
     public String cancelarCita(Long idCita) {
         CitaMedica cita = obtenerCitaPorId(idCita);
-
         cita.setEstado("CANCELADA");
         citaRepository.save(cita);
 
         EventoCancelacionDTO evento = new EventoCancelacionDTO();
         evento.setIdCitaOriginal(cita.getId());
-        evento.setEspecialidad(cita.getEspecialidadYTipo());
+        evento.setEspecialidad(cita.getEspecialidad()); 
         evento.setRutPacienteCancelado(cita.getRutPaciente());
-
-        rabbitTemplate.convertAndSend("citas.canceladas.queue", evento);
+        rabbitTemplate.convertAndSend(
+            RabbitMQConfig.EXCHANGE_NAME, 
+            RabbitMQConfig.ROUTING_KEY, 
+            evento
+        );
         
         return "Cita " + idCita + " del paciente " + cita.getRutPaciente() + " ha sido CANCELADA.";
     }

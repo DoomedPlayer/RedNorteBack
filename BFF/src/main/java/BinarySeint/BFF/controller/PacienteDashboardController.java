@@ -15,15 +15,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 import BinarySeint.BFF.dto.CitaMedicaDTO;
 import BinarySeint.BFF.dto.DashboardDTO;
 import BinarySeint.BFF.dto.DocumentoDTO;
-import BinarySeint.BFF.dto.RegistroEsperaBFF;
+import BinarySeint.BFF.dto.RegistroPacienteBFF;
 import BinarySeint.BFF.dto.ListaEsperaDTO;
 import BinarySeint.BFF.dto.PacienteDTO;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import jakarta.servlet.http.HttpServletRequest;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/bff") 
-@PreAuthorize("hasRole('PACIENTE')")
+@RequestMapping("/api/bff") 
+@PreAuthorize("hasAnyAuthority('PACIENTE', 'ROLE_PACIENTE')") 
 public class PacienteDashboardController {
 
     private final WebClient webClient;
@@ -34,46 +35,66 @@ public class PacienteDashboardController {
 
     @GetMapping("/dashboard")
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
-    public Mono<DashboardDTO> getDashboardCompleto(Authentication authentication) { 
+    public Mono<DashboardDTO> getDashboardCompleto(Authentication authentication, HttpServletRequest request) { 
 
         String rutId = authentication.getName();
+        String token = request.getHeader("Authorization"); 
 
         Mono<PacienteDTO> pacienteMono = webClient
                 .get()
-                .uri("http://patient-portal:8084/api/portal/patients/" + rutId)
+                .uri("http://patient-portal:8084/api/portal/pacientes/" + rutId)
+                .header("Authorization", token) 
                 .retrieve()
-                .bodyToMono(PacienteDTO.class);
+                .bodyToMono(PacienteDTO.class)
+                .doOnError(e -> System.err.println("❌ ERROR DESDE PATIENT-PORTAL: " + e.getMessage()))
+                .onErrorReturn(PacienteDTO.builder()
+                        .rut(rutId)
+                        .nombreCompleto("Paciente (Datos no disponibles)")
+                        .correo("-")
+                        .build());
                 
         Mono<ListaEsperaDTO> esperaMono = webClient
                 .get()
                 .uri("http://waitlist-service:8081/api/espera/paciente/" + rutId)
+                .header("Authorization", token)
                 .retrieve()
-                .bodyToMono(RegistroEsperaBFF.class)
+                .bodyToMono(RegistroPacienteBFF.class)
                 .map(registroRaw -> {
-                    // 1. Formatear la fecha
-                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy");
-                    String fechaFormateada = registroRaw.getFechaIngreso() != null ? registroRaw.getFechaIngreso().format(formatter) : "-";
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
+                    String fechaFormateada = registroRaw.getFechaRegistro() != null 
+                            ? registroRaw.getFechaRegistro().format(formatter) 
+                            : "-";
 
-                    // 2. Traducir prioridad
-                    String textoPrioridad = "Normal";
-                    if (registroRaw.getNivelPrioridad() != null) {
-                        if (registroRaw.getNivelPrioridad() == 1) textoPrioridad = "Alta (Urgencia)";
-                        else if (registroRaw.getNivelPrioridad() <= 3) textoPrioridad = "Media - Alta";
+                    String estadoFrontend = "Sin información";
+                    if (registroRaw.getEstado() != null) {
+                        switch (registroRaw.getEstado()) {
+                            case "EN_ESPERA":
+                                estadoFrontend = "Pendiente de asignación médica";
+                                break;
+                            case "HORA_ASIGNADA":
+                                estadoFrontend = "Hora médica asignada";
+                                break;
+                            case "EVALUANDO_ANTECEDENTES":
+                                estadoFrontend = "En evaluación clínica";
+                                break;
+                            case "SIN_REGISTROS":
+                                estadoFrontend = "Sin registros activos";
+                                break;
+                            default:
+                                estadoFrontend = registroRaw.getEstado();
+                        }
                     }
 
-                    // 3. Traducir estado
-                    String estadoFrontend = "En espera".equalsIgnoreCase(registroRaw.getEstado()) 
-                            ? "Pendiente de asignación médica" 
-                            : registroRaw.getEstado();
+                    String textoPrioridad = registroRaw.getPrioridad() != null ? registroRaw.getPrioridad() : "-";
 
-                    // 4. Retornar el DTO final
                     return new ListaEsperaDTO(estadoFrontend, fechaFormateada, textoPrioridad, registroRaw.isGesAuge());
                 })
                 .onErrorReturn(new ListaEsperaDTO("Sin registros", "-", "-", false));
                 
         Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()
-                .uri("http://auto-reasign_service:8083/api/citas/paciente/"+ rutId)
+                .uri("http://auto-reasign-service:8083/api/citas/paciente/"+ rutId)
+                .header("Authorization", token)
                 .retrieve()
                 .bodyToFlux(CitaMedicaDTO.class) 
                 .collectList()                  
@@ -81,7 +102,8 @@ public class PacienteDashboardController {
                 
         Mono<List<DocumentoDTO>> documentoMono = webClient
                 .get()
-                .uri("http://patient-portal:8084/api/v1/portal/pacientes/" + rutId + "/documentos")
+                .uri("http://patient-portal:8084/api/portal/pacientes/" + rutId + "/documentos")
+                .header("Authorization", token)
                 .retrieve()
                 .bodyToFlux(DocumentoDTO.class) 
                 .collectList()                  
@@ -98,7 +120,7 @@ public class PacienteDashboardController {
                 });
     }
 
-    public Mono<DashboardDTO> getDashboardCompletoFallback(Authentication authentication, Throwable t) {
+    public Mono<DashboardDTO> getDashboardCompletoFallback(Authentication authentication, HttpServletRequest request, Throwable t) {
 
         String rutId = (authentication != null) ? authentication.getName() : "Desconocido";
 
@@ -109,5 +131,5 @@ public class PacienteDashboardController {
                 .estadoListaEspera("Error de conexión temporal")
                 .build();
         return Mono.just(new DashboardDTO(pacienteError, null, new ArrayList<>(), new ArrayList<>()));
-    }   
+    }
 }

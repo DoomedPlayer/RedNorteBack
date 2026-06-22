@@ -53,6 +53,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_patient_portal?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - mysql-db
     networks:
@@ -70,6 +71,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_waitlist?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - mysql-db
     networks:
@@ -91,6 +93,7 @@ services:
       - SPRING_RABBITMQ_PORT=5672
       - SPRING_RABBITMQ_USERNAME=guest
       - SPRING_RABBITMQ_PASSWORD=guest
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - mysql-db
       - rabbitmq

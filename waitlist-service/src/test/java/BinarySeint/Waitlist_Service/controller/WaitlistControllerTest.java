@@ -1,10 +1,12 @@
 package BinarySeint.Waitlist_Service.controller;
 
-import BinarySeint.Waitlist_Service.model.RegistroEspera;
+import BinarySeint.Waitlist_Service.model.ListaEspera;
+import BinarySeint.Waitlist_Service.model.RegistroPaciente;
 import BinarySeint.Waitlist_Service.service.WaitlistService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -22,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(WaitlistController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class WaitlistControllerTest {
 
     @Autowired
@@ -33,20 +36,24 @@ class WaitlistControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Test
-    void testRegistrarPaciente_RetornaCreated() throws Exception {
+   @Test
+    void testRegistrarEnLista_RetornaCreated() throws Exception {
         Map<String, Object> request = new HashMap<>();
         request.put("rutPaciente", "11223344-5");
         request.put("idEspecialidad", 1);
         request.put("tipoAtencion", "Control");
         request.put("gesAuge", false);
 
-        RegistroEspera dummy = new RegistroEspera();
+        // Ahora el controlador devuelve un RegistroPaciente
+        RegistroPaciente dummy = new RegistroPaciente();
         dummy.setRutPaciente("11223344-5");
 
-        when(waitlistService.registrarPaciente(anyString(), anyInt(), anyString(), anyBoolean())).thenReturn(dummy);
+        // Llamamos al nuevo método del servicio
+        when(waitlistService.registrarEnListaEspera(anyString(), anyInt(), anyString(), anyBoolean()))
+                .thenReturn(dummy);
 
-        mockMvc.perform(post("/api/espera/registrar")
+        // El endpoint ahora es /api/espera/lista
+        mockMvc.perform(post("/api/espera/lista")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())

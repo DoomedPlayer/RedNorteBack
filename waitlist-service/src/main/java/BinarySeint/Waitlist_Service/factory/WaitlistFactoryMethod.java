@@ -1,9 +1,9 @@
 package BinarySeint.Waitlist_Service.factory;
 
-import BinarySeint.Waitlist_Service.model.RegistroEspera;
+import BinarySeint.Waitlist_Service.model.ListaEspera;
 
 public interface WaitlistFactoryMethod {
-    RegistroEspera crearRegistro(String rut, Integer idEspecialidad, boolean gesAuge);
+    ListaEspera crearRegistro(String rut, Integer idEspecialidad, boolean gesAuge);
     String getTipoAtencion();
     
 }

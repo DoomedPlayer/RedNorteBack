@@ -43,6 +43,12 @@ public class CitaMedicaController {
         return ResponseEntity.ok(cita);
     }
 
+    @GetMapping("/especialidad/{nombre}")
+    public ResponseEntity<List<CitaMedica>> obtenerCitasPorEspecialidad(@PathVariable("nombre") String nombre) {
+        List<CitaMedica> citas = citaMedicaService.obtenerCitasPorEspecialidad(nombre);
+        return ResponseEntity.ok(citas);
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<CitaMedica> actualizarCita(@PathVariable("id") Long id, @RequestBody CitaMedica datosActualizados) {
         CitaMedica citaEditada = citaMedicaService.actualizarCita(id, datosActualizados);

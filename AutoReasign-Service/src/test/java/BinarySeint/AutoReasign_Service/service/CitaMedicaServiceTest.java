@@ -2,6 +2,7 @@ package BinarySeint.AutoReasign_Service.service;
 
 import BinarySeint.AutoReasign_Service.dto.EventoCancelacionDTO;
 import BinarySeint.AutoReasign_Service.model.CitaMedica;
+import BinarySeint.AutoReasign_Service.model.TipoAtencion;
 import BinarySeint.AutoReasign_Service.repository.CitaMedicaRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +39,8 @@ class CitaMedicaServiceTest {
         citaDummy = new CitaMedica();
         citaDummy.setId(1L);
         citaDummy.setRutPaciente("12345678-9");
-        citaDummy.setEspecialidadYTipo("MedicinaGeneral");
+        citaDummy.setEspecialidad("MedicinaGeneral");
+        citaDummy.setTipoAtencion(TipoAtencion.CIRUGIA);
         citaDummy.setFechaHora(LocalDateTime.now().plusDays(2));
         citaDummy.setEstado("ACTIVA");
     }
@@ -72,7 +75,8 @@ class CitaMedicaServiceTest {
         verify(citaRepository, times(1)).save(citaDummy);
 
         verify(rabbitTemplate, times(1)).convertAndSend(
-                eq("citas.canceladas.queue"), 
+                anyString(), // Acepta cualquier Exchange (o usa eq(RabbitMQConfig.EXCHANGE_NAME) si lo importas)
+                anyString(), // Acepta cualquier Routing Key
                 any(EventoCancelacionDTO.class)
         );
     }

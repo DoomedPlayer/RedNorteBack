@@ -6,7 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/v1/bff/medico")
+@RequestMapping("/api/bff/medico")
 @PreAuthorize("hasRole('DOCTOR')")
 @CrossOrigin(origins = "*")
 public class MedicoBffController {

@@ -5,22 +5,21 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 
 import BinarySeint.Waitlist_Service.factory.WaitlistFactoryMethod;
-import BinarySeint.Waitlist_Service.model.RegistroEspera;
+import BinarySeint.Waitlist_Service.model.ListaEspera;
 
 @Component
 public class ProcedimientoFactory implements WaitlistFactoryMethod{
     @Override
-    public RegistroEspera crearRegistro(String rut, Integer idEspecialidad, boolean gesAuge) {
-        RegistroEspera registro = new RegistroEspera();
+    public ListaEspera crearRegistro(String rut, Integer idEspecialidad, boolean gesAuge) {
+        ListaEspera registro = new ListaEspera();
         registro.setRutPaciente(rut);
         registro.setIdEspecialidad(idEspecialidad);
         registro.setFechaIngreso(LocalDate.now());
-        registro.setEstado("En espera");
-        registro.setGesAuge(gesAuge);
+ 
 
         registro.setTipoAtencion("Procedimiento");
         registro.setNivelPrioridad(3);
-        
+        registro.setGesAuge(gesAuge);
         return registro;
     }
 
