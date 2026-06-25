@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "citas_medicas")
+@Table(name = "cita_medica")
 public class CitaMedica {
 
     @Id
@@ -15,26 +15,34 @@ public class CitaMedica {
     @Column(name = "rut_paciente")
     private String rutPaciente; 
 
-    @Column(name = "especialidad_tipo")
-    private String especialidadYTipo;
+    @Column(nullable = false)
+    private String especialidad;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_atencion", nullable = false)
+    private TipoAtencion tipoAtencion;
+
+    @Column(name = "medico")
     private String medico;
 
     @Column(name = "fecha_hora")
     private LocalDateTime fechaHora; 
 
+    @Column(name = "lugar")
     private String lugar;
 
-    private String estado; 
+    @Column(name = "estado")
+    private String estado;
 
     public CitaMedica() {
     }
 
-    public CitaMedica(String rutPaciente, String especialidadYTipo, String medico, LocalDateTime fechaHora, String lugar, String estado) {
+    public CitaMedica(String rutPaciente, String especialidad,TipoAtencion tipoAtencion, String medico, LocalDateTime fechaHora, String lugar, String estado) {
         this.rutPaciente = rutPaciente;
-        this.especialidadYTipo = especialidadYTipo;
+        this.especialidad = especialidad;
         this.medico = medico;
         this.fechaHora = fechaHora;
+        this.tipoAtencion= tipoAtencion;
         this.lugar = lugar;
         this.estado = estado;
     }
@@ -55,12 +63,20 @@ public class CitaMedica {
         this.rutPaciente = rutPaciente;
     }
 
-    public String getEspecialidadYTipo() {
-        return especialidadYTipo;
+    public String getEspecialidad() {
+        return especialidad;
     }
 
-    public void setEspecialidadYTipo(String especialidadYTipo) {
-        this.especialidadYTipo = especialidadYTipo;
+    public void setEspecialidad(String especialidad) {
+        this.especialidad = especialidad;
+    }
+
+    public TipoAtencion getTipoAtencion() {
+        return tipoAtencion;
+    }
+
+    public void setTipoAtencion(TipoAtencion tipo) {
+        this.tipoAtencion = tipo;
     }
 
     public String getMedico() {

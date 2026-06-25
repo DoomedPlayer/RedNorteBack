@@ -2,12 +2,6 @@ package BinarySeint.BFF.dto;
 
 import java.util.List;
 
-import com.rednorte.portal.dtos.PacienteDTO;
-import com.rednorte.portal.dtos.CitaMedicaDTO;
-import com.rednorte.portal.dtos.DocumentoDTO;
-import BinarySeint.Waitlist_Service.dto.ListaEsperaDTO;
-
-
 public class DashboardDTO {
 
     // 1. Bloque de Perfil del Paciente (Viene de Patient-Portal)
@@ -15,6 +9,7 @@ public class DashboardDTO {
     private String rut;
     private String email;
     private String contactoEmergenciaNombre;
+    private String contactoEmergenciaParentesco;
     private String contactoEmergenciaTelefono;
 
     // 2. Bloque de Prioridad Sanitaria / Lista de Espera (Viene de waitlist-service)
@@ -37,8 +32,9 @@ public class DashboardDTO {
             this.nombreCompleto = paciente.getNombreCompleto();
             this.rut = paciente.getRut();
             this.email = paciente.getCorreo();
-            //this.contactoEmergenciaNombre = paciente.getNombreEmergencia();
-            //this.contactoEmergenciaTelefono = paciente.getTelefonoEmergencia();
+            this.contactoEmergenciaNombre = paciente.getContactoEmergenciaNombre();
+            this.contactoEmergenciaParentesco = paciente.getContactoEmergenciaParentesco();
+            this.contactoEmergenciaTelefono = paciente.getContactoEmergenciaTelefono();
         }
         
         if (listaEspera != null) {
@@ -82,6 +78,14 @@ public class DashboardDTO {
 
     public void setContactoEmergenciaNombre(String contactoEmergenciaNombre) {
         this.contactoEmergenciaNombre = contactoEmergenciaNombre;
+    }
+
+    public String getContactoEmergenciaParentesco() {
+        return contactoEmergenciaParentesco;
+    }
+
+    public void setContactoEmergenciaParentesco(String contactoEmergenciaParentesco) {
+        this.contactoEmergenciaParentesco = contactoEmergenciaParentesco;
     }
 
     public String getContactoEmergenciaTelefono() {

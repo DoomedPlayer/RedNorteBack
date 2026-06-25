@@ -2,6 +2,7 @@ package BinarySeint.BFF.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -28,13 +29,20 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
+        System.out.println("=== NUEVA PETICIÓN EN BFF ===");
+        System.out.println("Ruta solicitada: " + request.getRequestURI());
+        System.out.println("Método: " + request.getMethod());
+        
         String authHeader = request.getHeader("Authorization");
+        System.out.println("Cabecera Authorization recibida: " + authHeader);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
 
             try {
+                // CORRECCIÓN: Usamos .getBytes() exactamente igual que en el auth-service
                 Key key = Keys.hmacShaKeyFor(secretKey.getBytes());
+                
                 Claims claims = Jwts.parserBuilder()
                         .setSigningKey(key)
                         .build()
@@ -49,7 +57,10 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(rut, null, authorities);
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
+                
             } catch (Exception e) {
+                System.err.println("Error procesando el JWT en el BFF: " + e.getMessage());
+                e.printStackTrace(); 
                 SecurityContextHolder.clearContext();
             }
         }

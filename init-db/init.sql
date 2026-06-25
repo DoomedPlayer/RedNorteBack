@@ -6,3 +6,6 @@ CREATE DATABASE IF NOT EXISTS db_waitlist CHARACTER SET utf8mb4 COLLATE utf8mb4_
 
 -- Crear base de datos para Auto-Reasignación si no existe
 CREATE DATABASE IF NOT EXISTS db_reasignacion CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Crear base de datos para Autenticación y Seguridad (NUEVA)
+CREATE DATABASE IF NOT EXISTS db_auth CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

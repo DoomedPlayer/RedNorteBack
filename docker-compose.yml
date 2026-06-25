@@ -1,7 +1,4 @@
 services:
-  # ========================================================
-  # MOTOR DE BASE DE DATOS UNIFICADO (Con inicialización de múltiples BDs)
-  # ========================================================
   mysql-db:
     image: mysql:8.0
     container_name: rednorte_mysql
@@ -11,80 +8,111 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # Aquí es donde Docker lee el script init.sql para crear las 3 BDs separadas
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - rednorte-network
 
-  # ========================================================
-  # MICROSERVICIOS DE LA PLATAFORMA
-  # ========================================================
-  
-  patient-portal:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: patient_portal_service
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_service
     ports:
-      - "8084:8084"
-    command: java -jar /app/Patient-Portal/target/patient-portal-service-0.0.1-SNAPSHOT.jar
+      - "5672:5672"   
+      - "15672:15672" 
+    networks:
+      - rednorte-network
+
+  auth-service:
+    build: .
+    container_name: auth_service
+    volumes:
+      - ./security/target/security-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    ports:
+      - "8085:8085"
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_patient_portal?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_auth?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - API_SECURITY_JWT_SECRET=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
+      - api.security.jwt.expiration=86400000
+    depends_on:
+      - mysql-db
+    networks:
+      - rednorte-network
+
+  patient-portal:
+    build: .
+    container_name: patient_portal_service
+    volumes:
+      - ./Patient-Portal/target/patient-portal-service-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_patient_portal?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=rootpassword
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - mysql-db
     networks:
       - rednorte-network
 
   waitlist-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: waitlist_service
+    volumes:
+      - ./waitlist-service/target/Waitlist-Service-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: java -jar /app/app.jar
     ports:
       - "8081:8081"
-    command: java -jar /app/waitlist-service/target/Waitlist-Service-0.0.1-SNAPSHOT.jar
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_waitlist?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_waitlist?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - mysql-db
     networks:
       - rednorte-network
 
   auto-reasign-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: auto_reasign_service
+    volumes:
+      - ./AutoReasign-Service/target/AutoReasign-Service-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: java -jar /app/app.jar
     ports:
       - "8083:8083"
-    command: java -jar /app/AutoReasign-Service/target/AutoReasign-Service-0.0.1-SNAPSHOT.jar
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_reasignacion?useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-db:3306/db_reasignacion?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       - SPRING_DATASOURCE_USERNAME=root
       - SPRING_DATASOURCE_PASSWORD=rootpassword
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - mysql-db
+      - rabbitmq
     networks:
       - rednorte-network
 
   bff-service:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: bff_service
+    volumes:
+      - ./BFF/target/BFF-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: java -jar /app/app.jar
     ports:
       - "8082:8082"
-    command: java -jar /app/BFF/target/BFF-0.0.1-SNAPSHOT.jar
     environment:
       - PATIENT_PORTAL_URI=http://patient-portal:8084
       - WAITLIST_URI=http://waitlist-service:8081
+      - API_SECURITY_JWT_SECRET=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
+      - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
       - patient-portal
       - waitlist-service
@@ -92,21 +120,13 @@ services:
       - rednorte-network
 
   api-gateway:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     container_name: api_gateway
+    volumes:
+      - ./ApiGateway/target/api-gateway-0.0.1-SNAPSHOT.jar:/app/app.jar
+    command: java -jar /app/app.jar
     ports:
       - "8080:8080"
-    command: java -jar /app/ApiGateway/target/api-gateway-0.0.1-SNAPSHOT.jar
-    environment:
-      - SPRING_CLOUD_GATEWAY_ROUTES_0_URI=http://bff-service:8082
-      - SPRING_CLOUD_GATEWAY_ROUTES_1_URI=http://patient-portal:8084
-      - SPRING_CLOUD_GATEWAY_ROUTES_2_URI=http://waitlist-service:8081
-      - SPRING_CLOUD_GATEWAY_ROUTES_3_URI=http://auto-reasign-service:8083
-    depends_on:
-      - bff-service
-      - auto-reasign-service
     networks:
       - rednorte-network
 
