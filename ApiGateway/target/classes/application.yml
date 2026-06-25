@@ -32,6 +32,41 @@ spring:
           predicates:
             - Path=/api/citas/**
 
+        - id: auth-docs
+          uri: http://auth-service:8085
+          predicates:
+            - Path=/v3/api-docs/auth
+          filters:
+            - RewritePath=/v3/api-docs/auth, /v3/api-docs
+
+        - id: portal-docs
+          uri: http://patient-portal:8084
+          predicates:
+            - Path=/v3/api-docs/portal
+          filters:
+            - RewritePath=/v3/api-docs/portal, /v3/api-docs
+
+        - id: waitlist-docs
+          uri: http://waitlist-service:8081
+          predicates:
+            - Path=/v3/api-docs/espera
+          filters:
+            - RewritePath=/v3/api-docs/espera, /v3/api-docs
+
+        - id: citas-docs
+          uri: http://auto-reasign-service:8083
+          predicates:
+            - Path=/v3/api-docs/citas
+          filters:
+            - RewritePath=/v3/api-docs/citas, /v3/api-docs
+
+        - id: bff-docs
+          uri: http://bff-service:8082
+          predicates:
+            - Path=/v3/api-docs/bff
+          filters:
+            - RewritePath=/v3/api-docs/bff, /v3/api-docs
+
       globalcors:
         cors-configurations:
           '[/**]':
@@ -43,3 +78,18 @@ spring:
               - DELETE
               - OPTIONS
             allowedHeaders: "*"
+springdoc:
+  swagger-ui:
+    urls:
+      - name: 1. Auth Service
+        url: /v3/api-docs/auth
+      - name: 2. Patient Portal
+        url: /v3/api-docs/portal
+      - name: 3. Waitlist Service
+        url: /v3/api-docs/espera
+      - name: 4. Auto Reasign Service
+        url: /v3/api-docs/citas
+      - name: 5. BFF Service
+        url: /v3/api-docs/bff
+
+        

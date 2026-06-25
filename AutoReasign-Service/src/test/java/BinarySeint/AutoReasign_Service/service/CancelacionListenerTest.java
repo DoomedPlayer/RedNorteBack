@@ -23,7 +23,7 @@ import java.util.Optional;
 class CancelacionListenerTest {
 
     @Mock
-    private ReasignacionRepository repository;
+    private ReasignacionRepository reasignacionRepo;
 
     @Mock
     private CitaMedicaRepository citaRepository;
@@ -45,11 +45,10 @@ class CancelacionListenerTest {
     }
 
     @Test
-    void testProcesarCancelacion_ConPacienteEnEspera_GuardaReasignacion() {
+    void testProcesarCancelacion_ConPacienteEnEsperaYCitaExiste_GuardaReasignacion() {
         String rutSiguientePaciente = "98765432-1";
         when(waitlistClient.obtenerSiguientePaciente("Dermatologia")).thenReturn(rutSiguientePaciente);
 
-        // 2. AÑADIDO: Simulamos que la cita original SÍ existe en la base de datos
         CitaMedica citaOriginalDummy = new CitaMedica();
         citaOriginalDummy.setId(100L);
         citaOriginalDummy.setEspecialidad("Dermatologia");
@@ -57,34 +56,57 @@ class CancelacionListenerTest {
         
         when(citaRepository.findById(100L)).thenReturn(Optional.of(citaOriginalDummy));
 
-        // Ejecutamos el método
         cancelacionListener.procesarCancelacion(eventoDummy);
 
-        // 3. Verificamos que ahora sí se guardan la nueva cita y la reasignación
         verify(citaRepository, times(1)).save(any(CitaMedica.class));
-        verify(repository, times(1)).save(any(Reasignacion.class));
+        verify(reasignacionRepo, times(1)).save(any(Reasignacion.class));
     }
 
     @Test
-    void testProcesarCancelacion_SinPacienteEnEspera_NoGuardaNada() {
+    void testProcesarCancelacion_CitaOriginalNoEncontrada_NoGuardaNada() {
+        String rutSiguientePaciente = "98765432-1";
+        when(waitlistClient.obtenerSiguientePaciente("Dermatologia")).thenReturn(rutSiguientePaciente);
 
+        when(citaRepository.findById(100L)).thenReturn(Optional.empty());
+
+        cancelacionListener.procesarCancelacion(eventoDummy);
+
+        verify(citaRepository, times(1)).findById(100L);
+        verify(citaRepository, never()).save(any(CitaMedica.class));
+        verify(reasignacionRepo, never()).save(any(Reasignacion.class));
+    }
+
+    @Test
+    void testProcesarCancelacion_SinPacienteEnEsperaNull_NoGuardaNada() {
         when(waitlistClient.obtenerSiguientePaciente("Dermatologia")).thenReturn(null);
 
         cancelacionListener.procesarCancelacion(eventoDummy);
 
-        verify(repository, never()).save(any(Reasignacion.class));
-        // Verificamos que tampoco intente crear una nueva cita
+        verify(citaRepository, never()).findById(anyLong());
         verify(citaRepository, never()).save(any(CitaMedica.class)); 
+        verify(reasignacionRepo, never()).save(any(Reasignacion.class));
     }
 
     @Test
-    void testProcesarCancelacion_ManejaExcepcionDelClienteFeign() {
-
-        when(waitlistClient.obtenerSiguientePaciente("Dermatologia"))
-                .thenThrow(new RuntimeException("Error de conexión"));
+    void testProcesarCancelacion_SinPacienteEnEsperaVacio_NoGuardaNada() {
+        when(waitlistClient.obtenerSiguientePaciente("Dermatologia")).thenReturn("");
 
         cancelacionListener.procesarCancelacion(eventoDummy);
 
-        verify(repository, never()).save(any(Reasignacion.class));
+        // Comprobamos la condición !rutReal.isEmpty() del listener
+        verify(citaRepository, never()).findById(anyLong());
+        verify(citaRepository, never()).save(any(CitaMedica.class)); 
+        verify(reasignacionRepo, never()).save(any(Reasignacion.class));
+    }
+
+    @Test
+    void testProcesarCancelacion_ManejaExcepcion_NoRompeAplicacion() {
+        when(waitlistClient.obtenerSiguientePaciente("Dermatologia"))
+                .thenThrow(new RuntimeException("Error simulado de conexión con Waitlist Service"));
+
+        cancelacionListener.procesarCancelacion(eventoDummy);
+
+        verify(citaRepository, never()).findById(anyLong());
+        verify(reasignacionRepo, never()).save(any(Reasignacion.class));
     }
 }

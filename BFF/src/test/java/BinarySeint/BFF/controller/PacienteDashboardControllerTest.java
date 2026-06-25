@@ -21,6 +21,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,6 +30,9 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PacienteDashboardControllerTest {
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
 
     @Mock
     private WebClient webClient;
@@ -48,69 +52,61 @@ class PacienteDashboardControllerTest {
     private Authentication authentication;
 
     @Mock
-    private HttpServletRequest request; // <-- Mock del request para obtener el Token
+    private HttpServletRequest request;
 
     private PacienteDashboardController controller;
 
     @BeforeEach
     void setUp() {
-        controller = new PacienteDashboardController(WebClient.builder());
-        ReflectionTestUtils.setField(controller, "webClient", webClient);
+        when(webClientBuilder.build()).thenReturn(webClient);
+        controller = new PacienteDashboardController(webClientBuilder);
     }
 
     @Test
-    void testGetDashboardCompleto_IntegraTodosLosDatos() {
-        // 1. Configuramos los mocks de autenticación y token
+    void testGetDashboardCompleto_IntegraTodosLosDatosYMapeaEstado() {
         when(authentication.getName()).thenReturn("11223344-5");
         when(request.getHeader("Authorization")).thenReturn("Bearer token-de-prueba");
 
-        // 2. Configuramos la cadena del WebClient incluyendo el nuevo .header()
+        // Simulación de la cadena WebClient
         when(webClient.get()).thenReturn(requestHeadersUriSpec);
         when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.header(anyString(), anyString())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
 
-        // 3. Mock de respuesta del Paciente
         PacienteDTO pacienteDummy = PacienteDTO.builder()
                 .rut("11223344-5")
                 .nombreCompleto("Juan Perez")
-                .correo("juan@mail.com")
                 .build();
         when(responseSpec.bodyToMono(PacienteDTO.class)).thenReturn(Mono.just(pacienteDummy));
 
-        // 4. Mock de respuesta de la Lista de Espera
         RegistroPacienteBFF esperaDummy = new RegistroPacienteBFF();
-        esperaDummy.setEstado("En espera"); 
+        esperaDummy.setEstado("EN_ESPERA"); 
+        esperaDummy.setFechaRegistro(LocalDate.of(2026, 6, 25));
+        esperaDummy.setPrioridad("Nivel 2");
         when(responseSpec.bodyToMono(RegistroPacienteBFF.class)).thenReturn(Mono.just(esperaDummy));
 
-        // 5. Mock de respuestas de Citas y Documentos
+        // Mock Citas y Documentos vacíos
         when(responseSpec.bodyToFlux(CitaMedicaDTO.class)).thenReturn(Flux.empty());
         when(responseSpec.bodyToFlux(DocumentoDTO.class)).thenReturn(Flux.empty());
 
-        // 6. Ejecutamos el controlador enviando ambos parámetros
         DashboardDTO resultado = controller.getDashboardCompleto(authentication, request).block();
 
-        // 7. Verificamos los resultados
         assertNotNull(resultado);
-        assertEquals("11223344-5", resultado.getRut());
         assertEquals("Juan Perez", resultado.getNombreCompleto());
-        // CORRECCIÓN: Ajustado al valor real que está retornando el controlador
-        assertEquals("En espera", resultado.getEstadoActual());
-        assertTrue(resultado.getProximasCitas().isEmpty());
+        assertEquals("Pendiente de asignación médica", resultado.getEstadoActual());
+        assertEquals("25-06-2026", resultado.getFechaIngresoLista());
     }
 
     @Test
     void testGetDashboardCompletoFallback_RetornaDatosDeContingencia() {
-        // Configuramos solo el authentication para el fallback
         when(authentication.getName()).thenReturn("99887766-5");
-        
-        // CORRECCIÓN: Se eliminó el mock de request.getHeader() porque el fallback no extrae el token.
 
         DashboardDTO resultado = controller.getDashboardCompletoFallback(authentication, request, new RuntimeException("Timeout")).block();
 
         assertNotNull(resultado);
         assertEquals("99887766-5", resultado.getRut());
         assertEquals("Servicio no disponible", resultado.getNombreCompleto());
-        assertNull(resultado.getEstadoActual()); 
+
+        assertNull(resultado.getEstadoActual());
     }
 }

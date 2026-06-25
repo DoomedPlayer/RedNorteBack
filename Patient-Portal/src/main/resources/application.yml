@@ -25,3 +25,8 @@ resilience4j:
         slidingWindowSize: 10
         failureRateThreshold: 40
         waitDurationInOpenState: 10s
+
+springdoc:
+  api-docs:
+    server:
+      servlet-context-path: /

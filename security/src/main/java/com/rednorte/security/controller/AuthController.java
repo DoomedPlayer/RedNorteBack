@@ -16,9 +16,14 @@ import com.rednorte.security.entity.Usuario;
 import com.rednorte.security.repository.UsuarioRepository;
 import com.rednorte.security.services.JwtService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Autenticación", description = "Endpoints para inicio de sesión y registro de usuarios en el sistema")
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
@@ -28,6 +33,9 @@ public class AuthController {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @PostMapping("/login")
+    @Operation(summary = "Iniciar sesión", description = "Autentica a un usuario y genera un token JWT.")
+    @ApiResponse(responseCode = "200", description = "Autenticación exitosa, retorna el token")
+    @ApiResponse(responseCode = "403", description = "Credenciales inválidas")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         
         authenticationManager.authenticate(
@@ -42,6 +50,9 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token, usuario.getRutPersona()));
     }
     @PostMapping("/register")
+    @Operation(summary = "Registrar usuario", description = "Crea un nuevo usuario con rol PACIENTE y sincroniza el perfil con Patient Portal.")
+    @ApiResponse(responseCode = "200", description = "Usuario registrado exitosamente")
+    @ApiResponse(responseCode = "400", description = "El RUT ya se encuentra registrado")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
 
         if (usuarioRepository.findByRutPersona(request.getRut()).isPresent()) {

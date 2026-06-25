@@ -3,12 +3,17 @@ package com.rednorte.portal.controllers;
 import com.rednorte.portal.dtos.PacienteDTO;
 import com.rednorte.portal.dtos.CitaMedicaDTO;
 import com.rednorte.portal.dtos.DocumentoDTO;
+import com.rednorte.portal.entities.Documento;
 import com.rednorte.portal.entities.Paciente;
 import com.rednorte.portal.entities.Persona;
+import com.rednorte.portal.repositories.DocumentoRepository;
 import com.rednorte.portal.repositories.PacienteRepository;
 import com.rednorte.portal.repositories.PersonaRepository;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +27,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/portal")
+@Tag(name = "Portal Paciente", description = "Gestión de perfiles, antecedentes y documentos clínicos de los pacientes")
 public class PortalController {
 
     @Autowired
@@ -30,11 +36,15 @@ public class PortalController {
     @Autowired
     private PersonaRepository personaRepository;
 
-    // =========================================================================
-    // 1. ENDPOINT DE INFORMACIÓN PERSONAL (BFF: /api/patients/{id})
-    // =========================================================================
+    @Autowired
+    private DocumentoRepository documentoRepository;
+
+
     @GetMapping("/pacientes/{rut}")
     @CircuitBreaker(name = "portalPacienteCB", fallbackMethod = "obtenerPacientePorRutFallback")
+    @Operation(summary = "Obtener perfil del paciente", description = "Retorna los datos personales consolidados del paciente usando su RUT.")
+    @ApiResponse(responseCode = "200", description = "Perfil encontrado")
+    @ApiResponse(responseCode = "404", description = "Paciente no registrado")
     public ResponseEntity<PacienteDTO> obtenerPacientePorRut(@PathVariable("rut") String rut) {
         
         Optional<Paciente> pacienteOpt = pacienteRepository.findByRutPaciente(rut);
@@ -62,27 +72,27 @@ public class PortalController {
         }
     }
 
-    // =========================================================================
-    // 3. ENDPOINT DE DOCUMENTOS/RECETAS (BFF: /api/v1/portal/pacientes/{id}/documentos)
-    // =========================================================================
     @GetMapping("/pacientes/{rut}/documentos")
-    public ResponseEntity<List<DocumentoDTO>> obtenerDocumentosPaciente(@PathVariable("rut") String rut) {
-        List<DocumentoDTO> documentos = new ArrayList<>();
-        
-        // TODO: Aquí debes llamar a tu repositorio real de recetas/exámenes por RUT
-        // Ejemplo de datos de prueba:
-        /*
-        documentos.add(DocumentoDTO.builder()
-                .tipo("Receta Médica Electrónica")
-                .descripcion("Tratamiento Crónico")
-                .fecha("01-06-2026")
-                .build());
-        */
-        
-        return ResponseEntity.ok(documentos);
+    @Operation(summary = "Obtener documentos médicos", description = "Retorna el historial de recetas y exámenes del paciente.")
+    public ResponseEntity<List<DocumentoDTO>> obtenerDocumentosPaciente(@PathVariable("rut") String rut) {        
+        List<Documento> documentosDB = documentoRepository.findByRutPaciente(rut);
+
+        List<DocumentoDTO> documentosDTO = new ArrayList<>();
+
+        for (Documento doc : documentosDB) {
+            DocumentoDTO dto = new DocumentoDTO(
+                doc.getNombreDocumento(),
+                doc.getEmisorYFecha(),
+                doc.getUrlDescarga()
+            );
+            documentosDTO.add(dto);
+        }
+
+        return ResponseEntity.ok(documentosDTO);
     }
 
     @PostMapping("/pacientes/registro-perfil")
+    @Operation(summary = "Sincronizar perfil desde Auth", description = "Endpoint interno llamado por Security para inicializar los datos demográficos tras el registro.")
     public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, String> requestData) {
 
         Persona persona = Persona.builder()
@@ -112,6 +122,7 @@ public class PortalController {
     }
 
     @GetMapping("/pacientes")
+    @Operation(summary = "Listar todos los pacientes", description = "Retorna el registro completo de pacientes inscritos.")
     public ResponseEntity<List<PacienteDTO>> obtenerTodosLosPacientes() {
         
         List<Paciente> pacientes = pacienteRepository.findAll();

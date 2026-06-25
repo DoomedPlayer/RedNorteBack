@@ -1,4 +1,4 @@
-package com.rednorte.portal.controllers.controller;
+package com.rednorte.portal.controller;
 
 import com.rednorte.portal.controllers.MedicoController;
 import com.rednorte.portal.entities.Medico;

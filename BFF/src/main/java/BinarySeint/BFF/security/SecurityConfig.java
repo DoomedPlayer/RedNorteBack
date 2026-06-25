@@ -32,6 +32,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
             .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() 
 
             .dispatcherTypeMatchers(DispatcherType.ASYNC).permitAll() 
+            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
 
             .requestMatchers("/api/bff/**").authenticated()
             .anyRequest().permitAll()

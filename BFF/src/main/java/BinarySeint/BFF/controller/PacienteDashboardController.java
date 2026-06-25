@@ -19,12 +19,16 @@ import BinarySeint.BFF.dto.RegistroPacienteBFF;
 import BinarySeint.BFF.dto.ListaEsperaDTO;
 import BinarySeint.BFF.dto.PacienteDTO;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/api/bff") 
 @PreAuthorize("hasAnyAuthority('PACIENTE', 'ROLE_PACIENTE')") 
+@Tag(name = "BFF Dashboard Paciente", description = "Orquestador de vistas frontend para la interfaz principal del paciente")
 public class PacienteDashboardController {
 
     private final WebClient webClient;
@@ -35,6 +39,8 @@ public class PacienteDashboardController {
 
     @GetMapping("/dashboard")
     @CircuitBreaker(name = "dashboardCB", fallbackMethod = "getDashboardCompletoFallback")
+    @Operation(summary = "Cargar Dashboard Completo", description = "Ejecuta peticiones asíncronas a Patient Portal, Waitlist y Citas para consolidar la vista inicial.")
+    @ApiResponse(responseCode = "200", description = "Dashboard consolidado y renderizado")
     public Mono<DashboardDTO> getDashboardCompleto(Authentication authentication, HttpServletRequest request) { 
 
         String rutId = authentication.getName();

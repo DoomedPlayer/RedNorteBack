@@ -5,6 +5,9 @@ import BinarySeint.Waitlist_Service.model.ListaEspera;
 import BinarySeint.Waitlist_Service.model.RegistroPaciente;
 import BinarySeint.Waitlist_Service.service.WaitlistService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,12 +19,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/espera")
+@Tag(name = "Lista de Espera", description = "Gestión de pacientes en espera por especialidad y prioridad")
 public class WaitlistController {
 
     @Autowired
     private WaitlistService service;
 
     @PostMapping("/paciente")
+    @Operation(summary = "Crear registro de paciente", description = "Crea o actualiza el estado de espera de un paciente.")
+    @ApiResponse(responseCode = "201", description = "Registro creado exitosamente")
     public ResponseEntity<RegistroPaciente> crearRegistroPaciente(@RequestBody Map<String, Object> request) {
         String rut = request.get("rutPaciente").toString();
         
@@ -37,6 +43,9 @@ public class WaitlistController {
     }
 
     @GetMapping("/paciente/{rut}")
+    @Operation(summary = "Obtener estado de espera", description = "Consulta la situación actual de un paciente específico mediante su RUT.")
+    @ApiResponse(responseCode = "200", description = "Registro encontrado")
+    @ApiResponse(responseCode = "404", description = "Paciente no encontrado en los registros")
     @CircuitBreaker(name = "waitlistCB", fallbackMethod = "obtenerEsperaPacienteFallback")
     public ResponseEntity<RegistroPaciente> obtenerEsperaPorPaciente(@PathVariable("rut") String rut) {
         RegistroPaciente registro = service.obtenerRegistroPorRut(rut);
@@ -48,6 +57,9 @@ public class WaitlistController {
     }
 
     @PutMapping("/paciente/{rut}/estado")
+    @Operation(summary = "Modificar estado (Doctor)", description = "Permite a un médico actualizar el estado y prioridad de un paciente.")
+    @ApiResponse(responseCode = "200", description = "Estado actualizado")
+    @ApiResponse(responseCode = "400", description = "Datos de estado inválidos")
     public ResponseEntity<RegistroPaciente> modificarEstadoPorDoctor(
             @PathVariable("rut") String rut, 
             @RequestBody Map<String, String> request) {
@@ -65,6 +77,8 @@ public class WaitlistController {
     }
 
     @PostMapping("/lista")
+    @Operation(summary = "Ingresar a lista de espera", description = "Añade un paciente a la fila de una especialidad médica y genera su ticket.")
+    @ApiResponse(responseCode = "201", description = "Paciente ingresado a la lista")
     @CircuitBreaker(name = "waitlistCB", fallbackMethod = "registrarListaFallback")
     public ResponseEntity<RegistroPaciente> registrarEnListaEspera(@RequestBody Map<String, Object> request) {
         Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
@@ -81,12 +95,15 @@ public class WaitlistController {
     }
 
     @GetMapping("/lista/{idEspecialidad}")
+    @Operation(summary = "Ver fila por especialidad", description = "Obtiene la lista de espera ordenada por prioridad y fecha de ingreso.")
     public ResponseEntity<List<ListaEspera>> obtenerLista(@PathVariable("idEspecialidad") Integer idEspecialidad) {
         List<ListaEspera> lista = service.obtenerListaPorEspecialidad(idEspecialidad);
         return ResponseEntity.ok(lista);
     }
 
     @DeleteMapping("/lista/{rut}")
+    @Operation(summary = "Eliminar de la lista", description = "Saca al paciente de la fila y actualiza su estado a HORA_ASIGNADA.")
+    @ApiResponse(responseCode = "204", description = "Paciente removido de la lista")
     public ResponseEntity<Void> eliminarDeListaEspera(@PathVariable("rut") String rut) {
         // Esto lo saca de la fila y le actualiza el estado a "HORA_ASIGNADA"
         boolean eliminado = service.eliminarRegistroPorRut(rut);
@@ -98,6 +115,7 @@ public class WaitlistController {
     }
 
     @GetMapping("/siguiente/{especialidad}")
+    @Operation(summary = "Obtener siguiente paciente", description = "Extrae y remueve de la lista al paciente con mayor prioridad para una especialidad.")
     public String obtenerSiguientePaciente(@PathVariable("especialidad") String especialidad) {
         return service.obtenerYSacarSiguientePaciente(especialidad);
     }
