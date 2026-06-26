@@ -129,6 +129,12 @@ Levantar todos los servicios
 docker compose up --build
 ```
 
+Levantar todos los servicios (Usar por segunda vez, ya que al levantarse los contenedores trata de insertar datos a la BD que se esta iniciando y se caen estos )
+
+```bash
+docker compose up --build
+```
+
 Docker Compose iniciará automáticamente:
 
 - API Gateway.
