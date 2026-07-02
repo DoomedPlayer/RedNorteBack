@@ -29,13 +29,12 @@ public class WaitlistService {
 
 
    @Transactional
-    public RegistroPaciente guardarRegistroPaciente(String rut, EstadoPaciente estado, String prioridad, boolean gesAuge) {
+    public RegistroPaciente guardarRegistroPaciente(String rut, EstadoPaciente estado, String prioridad) {
         RegistroPaciente paciente = registroPacienteRepo.findById(rut).orElse(new RegistroPaciente());
         paciente.setRutPaciente(rut);
         paciente.setEstado(estado); // Usamos el Enum
         paciente.setFechaRegistro(LocalDate.now());
         paciente.setPrioridad(prioridad);
-        paciente.setGesAuge(gesAuge);
         
         return registroPacienteRepo.save(paciente);
     }
@@ -61,14 +60,14 @@ public class WaitlistService {
     }
 
     @Transactional
-    public RegistroPaciente registrarEnListaEspera(String rut, Integer especialidad, String tipoAtencion, boolean gesAuge) {
+    public RegistroPaciente registrarEnListaEspera(String rut, Integer especialidad, String tipoAtencion) {
 
         WaitlistFactoryMethod fabrica = factoryProvider.obtenerFabrica(tipoAtencion);
-        ListaEspera ticket = fabrica.crearRegistro(rut, especialidad, gesAuge);
+        ListaEspera ticket = fabrica.crearRegistro(rut, especialidad );
         listaEsperaRepo.save(ticket);
         String prioridadTexto = traducirPrioridad(ticket.getNivelPrioridad());
         
-        return guardarRegistroPaciente(rut, EstadoPaciente.EN_ESPERA, prioridadTexto, gesAuge);
+        return guardarRegistroPaciente(rut, EstadoPaciente.EN_ESPERA, prioridadTexto);
     }
 
     public List<ListaEspera> obtenerListaPorEspecialidad(Integer especialidad) {
@@ -80,7 +79,7 @@ public class WaitlistService {
         try {
             listaEsperaRepo.deleteByRutPaciente(rutPaciente); 
 
-            guardarRegistroPaciente(rutPaciente, EstadoPaciente.HORA_ASIGNADA, "-", false);
+            guardarRegistroPaciente(rutPaciente, EstadoPaciente.HORA_ASIGNADA, "-");
             
             return true;
         } catch (Exception e) {

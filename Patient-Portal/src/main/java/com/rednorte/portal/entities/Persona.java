@@ -38,4 +38,7 @@ public class Persona {
 
     @Column(name = "id_direccion")
     private Integer idDireccion;
+
+    @Column(name = "edad")
+    private Integer edad;
 }

@@ -4,17 +4,15 @@ public class ListaEsperaDTO {
 
     private String estado;         
     private String fechaRegistro;  
-    private String prioridad;      
-    private boolean gesAuge;       
+    private String prioridad;            
 
     public ListaEsperaDTO() {
     }
 
-    public ListaEsperaDTO(String estado, String fechaRegistro, String prioridad, boolean gesAuge) {
+    public ListaEsperaDTO(String estado, String fechaRegistro, String prioridad) {
         this.estado = estado;
         this.fechaRegistro = fechaRegistro;
         this.prioridad = prioridad;
-        this.gesAuge = gesAuge;
     }
 
     public String getEstado() { return estado; }
@@ -26,6 +24,4 @@ public class ListaEsperaDTO {
     public String getPrioridad() { return prioridad; }
     public void setPrioridad(String prioridad) { this.prioridad = prioridad; }
 
-    public boolean isGesAuge() { return gesAuge; }
-    public void setGesAuge(boolean gesAuge) { this.gesAuge = gesAuge; }
 }

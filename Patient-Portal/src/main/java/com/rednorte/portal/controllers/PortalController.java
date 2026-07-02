@@ -60,7 +60,11 @@ public class PortalController {
                     .rut(paciente.getRutPaciente())
                     .nombreCompleto(nombreCompleto)
                     .correo(paciente.getPersona().getEmail())
+                    .edad(paciente.getPersona().getEdad()) 
+                    .prevision(paciente.getPrevision() != null ? paciente.getPrevision().name() : "NO REGISTRADA")
+                    .esGes(paciente.getEsGes() != null ? paciente.getEsGes() : false)
                     .estadoListaEspera("Pendiente de asignación médica")
+                    .antecedentesMedicos(paciente.getAntecedentesMedicos() != null ? paciente.getAntecedentesMedicos() : "Sin antecedentes registrados")
                     .contactoEmergenciaNombre(paciente.getContactoEmergenciaNombre())
                     .contactoEmergenciaParentesco(paciente.getContactoEmergenciaParentesco())
                     .contactoEmergenciaTelefono(paciente.getContactoEmergenciaTelefono())
@@ -136,6 +140,10 @@ public class PortalController {
                     .rut(p.getRutPaciente())
                     .nombreCompleto(nombreCompleto)
                     .correo(p.getPersona().getEmail())
+                    .edad(p.getPersona().getEdad())
+                    .prevision(p.getPrevision() != null ? p.getPrevision().name() : "NO REGISTRADA")
+                    .esGes(p.getEsGes() != null ? p.getEsGes() : false)
+                    .antecedentesMedicos(p.getAntecedentesMedicos() != null ? p.getAntecedentesMedicos() : "Sin antecedentes registrados")
                     .estadoListaEspera("Activo") 
                     .build();
                     

@@ -26,9 +26,6 @@ public class ListaEspera {
 
     @Column(name = "fecha_ingreso", nullable = false)
     private LocalDate fechaIngreso; 
-
-    @Column(name = "ges_auge", nullable = false)
-    private boolean gesAuge;
     
     public ListaEspera() {}
 
@@ -50,6 +47,4 @@ public class ListaEspera {
     public LocalDate getFechaIngreso() { return fechaIngreso; }
     public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
 
-    public boolean isGesAuge() { return gesAuge; }
-    public void setGesAuge(boolean gesAuge) { this.gesAuge = gesAuge; }
 }

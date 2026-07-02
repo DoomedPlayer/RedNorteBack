@@ -11,7 +11,7 @@ import BinarySeint.Waitlist_Service.model.ListaEspera;
 public class UrgenciaFactory implements WaitlistFactoryMethod {
 
     @Override
-    public ListaEspera crearRegistro(String rut, Integer idEspecialidad, boolean gesAuge) {
+    public ListaEspera crearRegistro(String rut, Integer idEspecialidad) {
         ListaEspera registro = new ListaEspera();
         registro.setRutPaciente(rut);
         registro.setIdEspecialidad(idEspecialidad);
@@ -19,7 +19,6 @@ public class UrgenciaFactory implements WaitlistFactoryMethod {
 
         registro.setTipoAtencion("Urgencia");
         registro.setNivelPrioridad(1);
-        registro.setGesAuge(gesAuge);
         return registro;
     }
 

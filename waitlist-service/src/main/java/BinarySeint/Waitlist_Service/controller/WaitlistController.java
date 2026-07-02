@@ -30,15 +30,13 @@ public class WaitlistController {
     @ApiResponse(responseCode = "201", description = "Registro creado exitosamente")
     public ResponseEntity<RegistroPaciente> crearRegistroPaciente(@RequestBody Map<String, Object> request) {
         String rut = request.get("rutPaciente").toString();
-        
-        // Si no envían estado, asumimos SIN_REGISTROS por defecto
+
         String estadoStr = request.get("estado") != null ? request.get("estado").toString() : "SIN_REGISTROS";
         EstadoPaciente estado = EstadoPaciente.valueOf(estadoStr);
         
         String prioridad = request.get("prioridad") != null ? request.get("prioridad").toString() : "Sin prioridad";
-        boolean gesAuge = request.get("gesAuge") != null && Boolean.parseBoolean(request.get("gesAuge").toString());
         
-        RegistroPaciente registrado = service.guardarRegistroPaciente(rut, estado, prioridad, gesAuge);
+        RegistroPaciente registrado = service.guardarRegistroPaciente(rut, estado, prioridad);
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
     }
 
@@ -82,14 +80,12 @@ public class WaitlistController {
     @CircuitBreaker(name = "waitlistCB", fallbackMethod = "registrarListaFallback")
     public ResponseEntity<RegistroPaciente> registrarEnListaEspera(@RequestBody Map<String, Object> request) {
         Integer idEspecialidad = Integer.parseInt(request.get("idEspecialidad").toString());
-        boolean gesAuge = request.get("gesAuge") != null && Boolean.parseBoolean(request.get("gesAuge").toString());
         
         // Crea el ticket de lista de espera y sincroniza el RegistroPaciente a "EN_ESPERA"
         RegistroPaciente registrado = service.registrarEnListaEspera(
                 request.get("rutPaciente").toString(),
                 idEspecialidad,
-                request.get("tipoAtencion").toString(),
-                gesAuge
+                request.get("tipoAtencion").toString()
         );
         return new ResponseEntity<>(registrado, HttpStatus.CREATED);
     }

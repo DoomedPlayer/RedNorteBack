@@ -11,6 +11,12 @@ services:
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - rednorte-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -24,6 +30,7 @@ services:
   auth-service:
     build: .
     container_name: auth_service
+    restart: on-failure
     volumes:
       - ./security/target/security-0.0.1-SNAPSHOT.jar:/app/app.jar
     command: java -jar /app/app.jar
@@ -37,13 +44,15 @@ services:
       - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
       - api.security.jwt.expiration=86400000
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     networks:
       - rednorte-network
 
   patient-portal:
     build: .
     container_name: patient_portal_service
+    restart: on-failure
     volumes:
       - ./Patient-Portal/target/patient-portal-service-0.0.1-SNAPSHOT.jar:/app/app.jar
     command: java -jar /app/app.jar
@@ -55,13 +64,15 @@ services:
       - SPRING_DATASOURCE_PASSWORD=rootpassword
       - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     networks:
       - rednorte-network
 
   waitlist-service:
     build: .
     container_name: waitlist_service
+    restart: on-failure
     volumes:
       - ./waitlist-service/target/Waitlist-Service-0.0.1-SNAPSHOT.jar:/app/app.jar
     command: java -jar /app/app.jar
@@ -73,13 +84,15 @@ services:
       - SPRING_DATASOURCE_PASSWORD=rootpassword
       - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
-      - mysql-db
+      mysql-db:
+        condition: service_healthy
     networks:
       - rednorte-network
 
   auto-reasign-service:
     build: .
     container_name: auto_reasign_service
+    restart: on-failure
     volumes:
       - ./AutoReasign-Service/target/AutoReasign-Service-0.0.1-SNAPSHOT.jar:/app/app.jar
     command: java -jar /app/app.jar
@@ -95,8 +108,11 @@ services:
       - SPRING_RABBITMQ_PASSWORD=guest
       - api.security.jwt.secret=T1VaRzZ4bU03T1B5bkhsWEtKVXo5Z01DckJWaTJGQ3E4RjNEOWEyYjVjN2UxZjRk
     depends_on:
-      - mysql-db
-      - rabbitmq
+      mysql-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      
     networks:
       - rednorte-network
 

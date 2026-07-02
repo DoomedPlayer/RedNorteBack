@@ -11,12 +11,14 @@ public class DashboardDTO {
     private String contactoEmergenciaNombre;
     private String contactoEmergenciaParentesco;
     private String contactoEmergenciaTelefono;
+    private Boolean esGes;
+    private String antecedentesMedicos;
 
     // 2. Bloque de Prioridad Sanitaria / Lista de Espera (Viene de waitlist-service)
     private String estadoActual;
     private String fechaIngresoLista;
     private String prioridadAsignada;
-    private boolean tieneCoberturaGesAuge;
+    
 
     // 3. Listados (Próximas citas, Recetas y Exámenes)
     private List<CitaMedicaDTO> proximasCitas;
@@ -35,13 +37,14 @@ public class DashboardDTO {
             this.contactoEmergenciaNombre = paciente.getContactoEmergenciaNombre();
             this.contactoEmergenciaParentesco = paciente.getContactoEmergenciaParentesco();
             this.contactoEmergenciaTelefono = paciente.getContactoEmergenciaTelefono();
+            this.esGes = paciente.getEsGes();
+            this.antecedentesMedicos = paciente.getAntecedentesMedicos();
         }
         
         if (listaEspera != null) {
             this.estadoActual = listaEspera.getEstado();
             this.fechaIngresoLista = listaEspera.getFechaRegistro();
             this.prioridadAsignada = listaEspera.getPrioridad();
-            this.tieneCoberturaGesAuge = listaEspera.isGesAuge();
         }
 
         this.proximasCitas = citas;
@@ -120,14 +123,6 @@ public class DashboardDTO {
         this.prioridadAsignada = prioridadAsignada;
     }
 
-    public boolean isTieneCoberturaGesAuge() {
-        return tieneCoberturaGesAuge;
-    }
-
-    public void setTieneCoberturaGesAuge(boolean tieneCoberturaGesAuge) {
-        this.tieneCoberturaGesAuge = tieneCoberturaGesAuge;
-    }
-
     public List<CitaMedicaDTO> getProximasCitas() {
         return proximasCitas;
     }
@@ -142,5 +137,20 @@ public class DashboardDTO {
 
     public void setRecetasYExamenes(List<DocumentoDTO> recetasYExamenes) {
         this.recetasYExamenes = recetasYExamenes;
+    }
+    public Boolean getEsGes() {
+        return esGes;
+    }
+
+    public void setEsGes(Boolean esGes) {
+        this.esGes = esGes;
+    }
+
+    public String getAntecedentesMedicos() {
+        return antecedentesMedicos;
+    }
+
+    public void setAntecedentesMedicos(String antecedentesMedicos) {
+        this.antecedentesMedicos = antecedentesMedicos;
     }
 }

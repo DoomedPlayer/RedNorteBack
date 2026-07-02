@@ -3,7 +3,8 @@ package BinarySeint.BFF.dto;
 public class CitaMedicaDTO {
 
     private Long id;
-    private String especialidadYTipo; 
+    private String especialidad; 
+    private String tipoAtencion;
     private String medico;            
     private String fechaHora;         
     private String lugar;
@@ -12,8 +13,9 @@ public class CitaMedicaDTO {
     public CitaMedicaDTO() {
     }
 
-    public CitaMedicaDTO(String especialidadYTipo, String medico, String fechaHora, String lugar,String estado) {
-        this.especialidadYTipo = especialidadYTipo;
+    public CitaMedicaDTO(String especialidad, String tipoAtencion, String medico, String fechaHora, String lugar,String estado) {
+        this.especialidad = especialidad;
+        this.tipoAtencion = tipoAtencion;
         this.medico = medico;
         this.fechaHora = fechaHora;
         this.lugar = lugar;
@@ -21,12 +23,20 @@ public class CitaMedicaDTO {
     }
 
 
-    public String getEspecialidadYTipo() {
-        return especialidadYTipo;
+    public String getEspecialidad() {
+        return especialidad;
     }
 
-    public void setEspecialidadYTipo(String especialidadYTipo) {
-        this.especialidadYTipo = especialidadYTipo;
+    public void setEspecialidad(String especialidad) {
+        this.especialidad = especialidad;
+    }
+
+    public String getTipoAtencion() {
+        return tipoAtencion;
+    }
+
+    public void setTipoAtencion(String tipoAtencion) {
+        this.tipoAtencion = tipoAtencion;
     }
 
     public String getMedico() {
