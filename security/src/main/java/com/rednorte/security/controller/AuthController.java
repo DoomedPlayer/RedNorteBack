@@ -69,7 +69,7 @@ public class AuthController {
         usuarioRepository.save(nuevoUsuario);
 
         try {
-            String portalUrl = "http://patient-portal:8084/api/v1/portal/pacientes/registro-perfil";
+            String portalUrl = "http://patient-portal:8084/api/portal/pacientes/registro-perfil";
             restTemplate.postForEntity(portalUrl, request, String.class);
         } catch (Exception e) {
 

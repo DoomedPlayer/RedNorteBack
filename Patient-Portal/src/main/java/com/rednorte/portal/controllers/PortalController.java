@@ -6,6 +6,7 @@ import com.rednorte.portal.dtos.DocumentoDTO;
 import com.rednorte.portal.entities.Documento;
 import com.rednorte.portal.entities.Paciente;
 import com.rednorte.portal.entities.Persona;
+import com.rednorte.portal.entities.TipoPrevision;
 import com.rednorte.portal.repositories.DocumentoRepository;
 import com.rednorte.portal.repositories.PacienteRepository;
 import com.rednorte.portal.repositories.PersonaRepository;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -95,29 +97,56 @@ public class PortalController {
         return ResponseEntity.ok(documentosDTO);
     }
 
+    @Transactional
     @PostMapping("/pacientes/registro-perfil")
     @Operation(summary = "Sincronizar perfil desde Auth", description = "Endpoint interno llamado por Security para inicializar los datos demográficos tras el registro.")
-    public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, String> requestData) {
+    public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, Object> requestData) { 
+
+        Integer edadPaciente = null;
+        if (requestData.get("edad") != null && !requestData.get("edad").toString().isEmpty()) {
+            edadPaciente = Integer.parseInt(requestData.get("edad").toString());
+        }
 
         Persona persona = Persona.builder()
-                .rut(requestData.get("rut"))
-                .primerNombre(requestData.get("nombre"))
-                .apellidoPaterno(requestData.get("apellidoPaterno"))
-                .apellidoMaterno(requestData.get("apellidoMaterno"))
-                .email(requestData.get("correo"))
-                .telefono(requestData.get("telefono"))
+                .rut(requestData.get("rut") != null ? requestData.get("rut").toString() : "")
+                .primerNombre(requestData.get("nombre") != null ? requestData.get("nombre").toString() : "Sin Nombre")
+                .apellidoPaterno(requestData.get("apellidoPaterno") != null ? requestData.get("apellidoPaterno").toString() : "")
+                .apellidoMaterno(requestData.get("apellidoMaterno") != null ? requestData.get("apellidoMaterno").toString() : "")
+                .email(requestData.get("correo") != null ? requestData.get("correo").toString() : "")
+                .telefono(requestData.get("telefono") != null ? requestData.get("telefono").toString() : "")
+                .edad(edadPaciente)
                 .build();
 
-        personaRepository.save(persona);
+        persona = personaRepository.save(persona);
+        
+        String antecedentes = "Sin antecedentes registrados";
+        if (requestData.get("antecedentesMedicos") != null && !requestData.get("antecedentesMedicos").toString().trim().isEmpty()) {
+            antecedentes = requestData.get("antecedentesMedicos").toString();
+        }
+
+        boolean esGes = false;
+        if (requestData.get("esGes") != null) {
+            esGes = Boolean.parseBoolean(requestData.get("esGes").toString());
+        }
+
+        TipoPrevision tipoPrevision = null;
+        if (requestData.get("prevision") != null && !requestData.get("prevision").toString().isEmpty()) {
+            try {
+                tipoPrevision = TipoPrevision.valueOf(requestData.get("prevision").toString());
+            } catch (IllegalArgumentException e) {
+                System.err.println("Previsión no válida: " + requestData.get("prevision"));
+            }
+        }
         
         Paciente paciente = Paciente.builder()
-                .rutPaciente(requestData.get("rut"))
+                .rutPaciente(persona.getRut()) 
                 .persona(persona)
-                .antecedentesMedicos("Sin antecedentes registrados")
-                // Mapeamos los datos de emergencia que vienen desde React -> Auth -> Portal
-                .contactoEmergenciaNombre(requestData.get("contactoEmergenciaNombre"))
-                .contactoEmergenciaParentesco(requestData.get("contactoEmergenciaParentesco"))
-                .contactoEmergenciaTelefono(requestData.get("contactoEmergenciaTelefono"))
+                .antecedentesMedicos(antecedentes)
+                .esGes(esGes)
+                .prevision(tipoPrevision)
+                .contactoEmergenciaNombre(requestData.get("contactoEmergenciaNombre") != null ? requestData.get("contactoEmergenciaNombre").toString() : "No registrado")
+                .contactoEmergenciaParentesco(requestData.get("contactoEmergenciaParentesco") != null ? requestData.get("contactoEmergenciaParentesco").toString() : "No registrado")
+                .contactoEmergenciaTelefono(requestData.get("contactoEmergenciaTelefono") != null ? requestData.get("contactoEmergenciaTelefono").toString() : "No registrado")
                 .build();
 
         pacienteRepository.save(paciente);
