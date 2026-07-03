@@ -15,6 +15,7 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,9 @@ public class PortalController {
 
     @Autowired
     private DocumentoRepository documentoRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
 
     @GetMapping("/pacientes/{rut}")
@@ -117,7 +121,7 @@ public class PortalController {
                 .edad(edadPaciente)
                 .build();
 
-        persona = personaRepository.save(persona);
+        entityManager.persist(persona);
         
         String antecedentes = "Sin antecedentes registrados";
         if (requestData.get("antecedentesMedicos") != null && !requestData.get("antecedentesMedicos").toString().trim().isEmpty()) {
@@ -149,7 +153,7 @@ public class PortalController {
                 .contactoEmergenciaTelefono(requestData.get("contactoEmergenciaTelefono") != null ? requestData.get("contactoEmergenciaTelefono").toString() : "No registrado")
                 .build();
 
-        pacienteRepository.save(paciente);
+        entityManager.persist(paciente);
 
         return ResponseEntity.ok().build();
     }
