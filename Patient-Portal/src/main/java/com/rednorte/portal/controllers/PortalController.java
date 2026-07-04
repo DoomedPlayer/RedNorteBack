@@ -186,6 +186,38 @@ public class PortalController {
         return ResponseEntity.ok(listaResponse);
     }
 
+    @Transactional
+    @PutMapping("/pacientes/{rut}")
+    @Operation(summary = "Actualizar paciente", description = "Actualiza los antecedentes y datos GES del paciente desde el portal médico.")
+    public ResponseEntity<Void> actualizarPaciente(@PathVariable("rut") String rut, @RequestBody Map<String, Object> payload) {
+        
+        Optional<Paciente> pacienteOpt = pacienteRepository.findByRutPaciente(rut);
+        
+        if (pacienteOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Paciente paciente = pacienteOpt.get();
+        Persona persona = paciente.getPersona();
+
+        if (payload.containsKey("nombre") && payload.get("nombre") != null) {
+            persona.setPrimerNombre(payload.get("nombre").toString());
+        }
+
+        if (payload.containsKey("esGes") && payload.get("esGes") != null) {
+            paciente.setEsGes(Boolean.parseBoolean(payload.get("esGes").toString()));
+        }
+
+        if (payload.containsKey("antecedentesMedicos") && payload.get("antecedentesMedicos") != null) {
+            paciente.setAntecedentesMedicos(payload.get("antecedentesMedicos").toString());
+        }
+
+        personaRepository.save(persona);
+        pacienteRepository.save(paciente);
+
+        return ResponseEntity.ok().build();
+    }
+
     // Fallback de Circuit Breaker para el perfil básico
     public ResponseEntity<PacienteDTO> obtenerPacientePorRutFallback(String rut, Throwable t) {
         PacienteDTO dtoContingencia = PacienteDTO.builder()
