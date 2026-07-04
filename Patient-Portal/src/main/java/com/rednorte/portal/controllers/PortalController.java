@@ -6,6 +6,7 @@ import com.rednorte.portal.dtos.DocumentoDTO;
 import com.rednorte.portal.entities.Documento;
 import com.rednorte.portal.entities.Paciente;
 import com.rednorte.portal.entities.Persona;
+import com.rednorte.portal.entities.TipoPrevision;
 import com.rednorte.portal.repositories.DocumentoRepository;
 import com.rednorte.portal.repositories.PacienteRepository;
 import com.rednorte.portal.repositories.PersonaRepository;
@@ -14,10 +15,12 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -38,6 +41,9 @@ public class PortalController {
 
     @Autowired
     private DocumentoRepository documentoRepository;
+
+    @Autowired
+    private EntityManager entityManager;
 
 
     @GetMapping("/pacientes/{rut}")
@@ -60,7 +66,11 @@ public class PortalController {
                     .rut(paciente.getRutPaciente())
                     .nombreCompleto(nombreCompleto)
                     .correo(paciente.getPersona().getEmail())
+                    .edad(paciente.getPersona().getEdad()) 
+                    .prevision(paciente.getPrevision() != null ? paciente.getPrevision().name() : "NO REGISTRADA")
+                    .esGes(paciente.getEsGes() != null ? paciente.getEsGes() : false)
                     .estadoListaEspera("Pendiente de asignación médica")
+                    .antecedentesMedicos(paciente.getAntecedentesMedicos() != null ? paciente.getAntecedentesMedicos() : "Sin antecedentes registrados")
                     .contactoEmergenciaNombre(paciente.getContactoEmergenciaNombre())
                     .contactoEmergenciaParentesco(paciente.getContactoEmergenciaParentesco())
                     .contactoEmergenciaTelefono(paciente.getContactoEmergenciaTelefono())
@@ -91,32 +101,59 @@ public class PortalController {
         return ResponseEntity.ok(documentosDTO);
     }
 
+    @Transactional
     @PostMapping("/pacientes/registro-perfil")
     @Operation(summary = "Sincronizar perfil desde Auth", description = "Endpoint interno llamado por Security para inicializar los datos demográficos tras el registro.")
-    public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, String> requestData) {
+    public ResponseEntity<Void> crearPerfilPacienteDesdeAuth(@RequestBody Map<String, Object> requestData) { 
+
+        Integer edadPaciente = null;
+        if (requestData.get("edad") != null && !requestData.get("edad").toString().isEmpty()) {
+            edadPaciente = Integer.parseInt(requestData.get("edad").toString());
+        }
 
         Persona persona = Persona.builder()
-                .rut(requestData.get("rut"))
-                .primerNombre(requestData.get("nombre"))
-                .apellidoPaterno(requestData.get("apellidoPaterno"))
-                .apellidoMaterno(requestData.get("apellidoMaterno"))
-                .email(requestData.get("correo"))
-                .telefono(requestData.get("telefono"))
+                .rut(requestData.get("rut") != null ? requestData.get("rut").toString() : "")
+                .primerNombre(requestData.get("nombre") != null ? requestData.get("nombre").toString() : "Sin Nombre")
+                .apellidoPaterno(requestData.get("apellidoPaterno") != null ? requestData.get("apellidoPaterno").toString() : "")
+                .apellidoMaterno(requestData.get("apellidoMaterno") != null ? requestData.get("apellidoMaterno").toString() : "")
+                .email(requestData.get("correo") != null ? requestData.get("correo").toString() : "")
+                .telefono(requestData.get("telefono") != null ? requestData.get("telefono").toString() : "")
+                .edad(edadPaciente)
                 .build();
 
-        personaRepository.save(persona);
+        entityManager.persist(persona);
+        
+        String antecedentes = "Sin antecedentes registrados";
+        if (requestData.get("antecedentesMedicos") != null && !requestData.get("antecedentesMedicos").toString().trim().isEmpty()) {
+            antecedentes = requestData.get("antecedentesMedicos").toString();
+        }
+
+        boolean esGes = false;
+        if (requestData.get("esGes") != null) {
+            esGes = Boolean.parseBoolean(requestData.get("esGes").toString());
+        }
+
+        TipoPrevision tipoPrevision = null;
+        if (requestData.get("prevision") != null && !requestData.get("prevision").toString().isEmpty()) {
+            try {
+                tipoPrevision = TipoPrevision.valueOf(requestData.get("prevision").toString());
+            } catch (IllegalArgumentException e) {
+                System.err.println("Previsión no válida: " + requestData.get("prevision"));
+            }
+        }
         
         Paciente paciente = Paciente.builder()
-                .rutPaciente(requestData.get("rut"))
+                .rutPaciente(persona.getRut()) 
                 .persona(persona)
-                .antecedentesMedicos("Sin antecedentes registrados")
-                // Mapeamos los datos de emergencia que vienen desde React -> Auth -> Portal
-                .contactoEmergenciaNombre(requestData.get("contactoEmergenciaNombre"))
-                .contactoEmergenciaParentesco(requestData.get("contactoEmergenciaParentesco"))
-                .contactoEmergenciaTelefono(requestData.get("contactoEmergenciaTelefono"))
+                .antecedentesMedicos(antecedentes)
+                .esGes(esGes)
+                .prevision(tipoPrevision)
+                .contactoEmergenciaNombre(requestData.get("contactoEmergenciaNombre") != null ? requestData.get("contactoEmergenciaNombre").toString() : "No registrado")
+                .contactoEmergenciaParentesco(requestData.get("contactoEmergenciaParentesco") != null ? requestData.get("contactoEmergenciaParentesco").toString() : "No registrado")
+                .contactoEmergenciaTelefono(requestData.get("contactoEmergenciaTelefono") != null ? requestData.get("contactoEmergenciaTelefono").toString() : "No registrado")
                 .build();
 
-        pacienteRepository.save(paciente);
+        entityManager.persist(paciente);
 
         return ResponseEntity.ok().build();
     }
@@ -136,6 +173,10 @@ public class PortalController {
                     .rut(p.getRutPaciente())
                     .nombreCompleto(nombreCompleto)
                     .correo(p.getPersona().getEmail())
+                    .edad(p.getPersona().getEdad())
+                    .prevision(p.getPrevision() != null ? p.getPrevision().name() : "NO REGISTRADA")
+                    .esGes(p.getEsGes() != null ? p.getEsGes() : false)
+                    .antecedentesMedicos(p.getAntecedentesMedicos() != null ? p.getAntecedentesMedicos() : "Sin antecedentes registrados")
                     .estadoListaEspera("Activo") 
                     .build();
                     
@@ -143,6 +184,38 @@ public class PortalController {
         }
 
         return ResponseEntity.ok(listaResponse);
+    }
+
+    @Transactional
+    @PutMapping("/pacientes/{rut}")
+    @Operation(summary = "Actualizar paciente", description = "Actualiza los antecedentes y datos GES del paciente desde el portal médico.")
+    public ResponseEntity<Void> actualizarPaciente(@PathVariable("rut") String rut, @RequestBody Map<String, Object> payload) {
+        
+        Optional<Paciente> pacienteOpt = pacienteRepository.findByRutPaciente(rut);
+        
+        if (pacienteOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Paciente paciente = pacienteOpt.get();
+        Persona persona = paciente.getPersona();
+
+        if (payload.containsKey("nombre") && payload.get("nombre") != null) {
+            persona.setPrimerNombre(payload.get("nombre").toString());
+        }
+
+        if (payload.containsKey("esGes") && payload.get("esGes") != null) {
+            paciente.setEsGes(Boolean.parseBoolean(payload.get("esGes").toString()));
+        }
+
+        if (payload.containsKey("antecedentesMedicos") && payload.get("antecedentesMedicos") != null) {
+            paciente.setAntecedentesMedicos(payload.get("antecedentesMedicos").toString());
+        }
+
+        personaRepository.save(persona);
+        pacienteRepository.save(paciente);
+
+        return ResponseEntity.ok().build();
     }
 
     // Fallback de Circuit Breaker para el perfil básico

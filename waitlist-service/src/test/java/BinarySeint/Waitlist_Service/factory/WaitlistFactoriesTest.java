@@ -17,13 +17,12 @@ class WaitlistFactoriesTest {
         
         assertEquals("CIRUGIA", factory.getTipoAtencion());
 
-        ListaEspera registro = factory.crearRegistro("12345678-9", 10, true);
+        ListaEspera registro = factory.crearRegistro("12345678-9", 10);
         assertNotNull(registro);
         assertEquals("12345678-9", registro.getRutPaciente());
         assertEquals(10, registro.getIdEspecialidad());
         assertEquals("Cirugía", registro.getTipoAtencion());
         assertEquals(2, registro.getNivelPrioridad());
-        assertTrue(registro.isGesAuge()); // O getGesAuge() según tu LomBok/POJO
         assertNotNull(registro.getFechaIngreso());
     }
 
@@ -33,13 +32,12 @@ class WaitlistFactoriesTest {
         
         assertEquals("CONSULTA", factory.getTipoAtencion());
 
-        ListaEspera registro = factory.crearRegistro("11111111-1", 20, false);
+        ListaEspera registro = factory.crearRegistro("11111111-1", 20);
         assertNotNull(registro);
         assertEquals("11111111-1", registro.getRutPaciente());
         assertEquals(20, registro.getIdEspecialidad());
         assertEquals("Consulta", registro.getTipoAtencion());
         assertEquals(5, registro.getNivelPrioridad());
-        assertFalse(registro.isGesAuge());
         assertNotNull(registro.getFechaIngreso());
     }
 
@@ -49,13 +47,12 @@ class WaitlistFactoriesTest {
         
         assertEquals("PROCEDIMIENTO", factory.getTipoAtencion());
 
-        ListaEspera registro = factory.crearRegistro("22222222-2", 30, true);
+        ListaEspera registro = factory.crearRegistro("22222222-2", 30);
         assertNotNull(registro);
         assertEquals("22222222-2", registro.getRutPaciente());
         assertEquals(30, registro.getIdEspecialidad());
         assertEquals("Procedimiento", registro.getTipoAtencion());
         assertEquals(3, registro.getNivelPrioridad());
-        assertTrue(registro.isGesAuge());
         assertNotNull(registro.getFechaIngreso());
     }
 
@@ -65,13 +62,12 @@ class WaitlistFactoriesTest {
         
         assertEquals("URGENCIA", factory.getTipoAtencion());
 
-        ListaEspera registro = factory.crearRegistro("33333333-3", 40, false);
+        ListaEspera registro = factory.crearRegistro("33333333-3", 40);
         assertNotNull(registro);
         assertEquals("33333333-3", registro.getRutPaciente());
         assertEquals(40, registro.getIdEspecialidad());
         assertEquals("Urgencia", registro.getTipoAtencion());
         assertEquals(1, registro.getNivelPrioridad());
-        assertFalse(registro.isGesAuge());
         assertNotNull(registro.getFechaIngreso());
     }
 }

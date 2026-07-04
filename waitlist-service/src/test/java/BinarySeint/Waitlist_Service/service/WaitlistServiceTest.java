@@ -42,7 +42,7 @@ class WaitlistServiceTest {
         when(registroPacienteRepo.findById(anyString())).thenReturn(Optional.of(paciente));
         when(registroPacienteRepo.save(any(RegistroPaciente.class))).thenReturn(paciente);
 
-        RegistroPaciente resultado = waitlistService.guardarRegistroPaciente("123", EstadoPaciente.EN_ESPERA, "Nivel 1", false);
+        RegistroPaciente resultado = waitlistService.guardarRegistroPaciente("123", EstadoPaciente.EN_ESPERA, "Nivel 1");
 
         assertNotNull(resultado);
         verify(registroPacienteRepo).save(any(RegistroPaciente.class));
@@ -96,11 +96,11 @@ class WaitlistServiceTest {
         ListaEspera ticketDummy = new ListaEspera();
         ticketDummy.setNivelPrioridad(1); 
         
-        when(mockFactory.crearRegistro(anyString(), anyInt(), anyBoolean())).thenReturn(ticketDummy);
+        when(mockFactory.crearRegistro(anyString(), anyInt())).thenReturn(ticketDummy);
         when(registroPacienteRepo.findById(anyString())).thenReturn(Optional.of(new RegistroPaciente()));
         when(registroPacienteRepo.save(any(RegistroPaciente.class))).thenReturn(new RegistroPaciente());
 
-        waitlistService.registrarEnListaEspera("123", 1, "Cirugía", false);
+        waitlistService.registrarEnListaEspera("123", 1, "Cirugía");
 
         verify(listaEsperaRepo).save(any(ListaEspera.class));
     }

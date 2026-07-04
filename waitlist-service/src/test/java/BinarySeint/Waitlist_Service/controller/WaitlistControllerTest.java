@@ -52,7 +52,7 @@ class WaitlistControllerTest {
         RegistroPaciente dummy = new RegistroPaciente();
         dummy.setRutPaciente("12345678-9");
 
-        when(waitlistService.guardarRegistroPaciente(anyString(), any(EstadoPaciente.class), anyString(), anyBoolean()))
+        when(waitlistService.guardarRegistroPaciente(anyString(), any(EstadoPaciente.class), anyString()))
                 .thenReturn(dummy);
 
         mockMvc.perform(post("/api/espera/paciente")
@@ -130,7 +130,7 @@ class WaitlistControllerTest {
         request.put("idEspecialidad", 1);
         request.put("tipoAtencion", "Urgencia");
 
-        when(waitlistService.registrarEnListaEspera(anyString(), anyInt(), anyString(), anyBoolean()))
+        when(waitlistService.registrarEnListaEspera(anyString(), anyInt(), anyString()))
                 .thenReturn(new RegistroPaciente());
 
         mockMvc.perform(post("/api/espera/lista")

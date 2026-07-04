@@ -93,9 +93,9 @@ public class PacienteDashboardController {
 
                     String textoPrioridad = registroRaw.getPrioridad() != null ? registroRaw.getPrioridad() : "-";
 
-                    return new ListaEsperaDTO(estadoFrontend, fechaFormateada, textoPrioridad, registroRaw.isGesAuge());
+                    return new ListaEsperaDTO(estadoFrontend, fechaFormateada, textoPrioridad);
                 })
-                .onErrorReturn(new ListaEsperaDTO("Sin registros", "-", "-", false));
+                .onErrorReturn(new ListaEsperaDTO("Sin registros", "-", "-"));
                 
         Mono<List<CitaMedicaDTO>> citaMono = webClient
                 .get()

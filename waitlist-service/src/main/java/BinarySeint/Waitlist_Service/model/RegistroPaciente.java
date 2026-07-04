@@ -27,9 +27,6 @@ public class RegistroPaciente {
     @Column(nullable = false)
     private String prioridad; 
 
-    @Column(name = "ges_auge", nullable = false)
-    private boolean gesAuge;
-
     public RegistroPaciente() {}
 
     public String getRutPaciente() { return rutPaciente; }
@@ -37,9 +34,6 @@ public class RegistroPaciente {
 
     public EstadoPaciente getEstado() { return estado; }
     public void setEstado(EstadoPaciente estado) { this.estado = estado; }
-
-    public boolean isGesAuge() { return gesAuge; }
-    public void setGesAuge(boolean gesAuge) { this.gesAuge = gesAuge; }
 
     public LocalDate getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDate fechaRegistro) { this.fechaRegistro = fechaRegistro; }

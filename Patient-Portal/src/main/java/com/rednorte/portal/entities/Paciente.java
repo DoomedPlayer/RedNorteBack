@@ -30,6 +30,13 @@ public class Paciente {
     @Column(name = "contacto_emergencia_telefono", length = 20)
     private String contactoEmergenciaTelefono;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "prevision", length = 20)
+    private TipoPrevision prevision;
+
+    @Column(name = "es_ges", columnDefinition = "boolean default false")
+    private Boolean esGes;
+
     @OneToOne
     @MapsId
     @JoinColumn(name = "rut_paciente")
